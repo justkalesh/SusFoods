@@ -16,12 +16,9 @@ interface Donor {
 }
 
 const MOCK_DONORS: Donor[] = [
-  { id: "d1", businessName: "Fresh Market Banquets",  foodType: "Prepared Meals",   quantity: "15 kg", lat: 31.2580, lng: 75.9530 },
-  { id: "d2", businessName: "The Daily Bakehouse",    foodType: "Bakery & Breads",   quantity: "8 kg",  lat: 31.2540, lng: 75.9580 },
-  { id: "d3", businessName: "Green Leaf Kitchens",    foodType: "Produce & Salads",  quantity: "22 kg", lat: 31.2600, lng: 75.9500 },
-  { id: "d4", businessName: "Hotel Grand Paradise",   foodType: "Buffet Surplus",    quantity: "30 kg", lat: 31.2520, lng: 75.9600 },
-  { id: "d5", businessName: "Sunrise Dairy Farm",     foodType: "Dairy Products",    quantity: "12 kg", lat: 31.2565, lng: 75.9470 },
-  { id: "d6", businessName: "Metro Catering Co.",     foodType: "Prepared Meals",    quantity: "18 kg", lat: 31.2610, lng: 75.9560 },
+  { id: "d1", businessName: "Campus Mess Court",       foodType: "Dal Makhani",     quantity: "50 portions", lat: 31.2540, lng: 75.9580 },
+  { id: "d2", businessName: "Law Gate Kiosk",          foodType: "Bread Loaves",    quantity: "20 loaves",   lat: 31.2585, lng: 75.9510 },
+  { id: "d3", businessName: "Phagwara Banquet Hall",   foodType: "Mixed Veg",       quantity: "10 kg",       lat: 31.2490, lng: 75.9650 },
 ]
 
 // ── Custom Marker Icon ──────────────────────────────────────
@@ -48,19 +45,19 @@ function DonorMapInner() {
       {/* Legend overlay */}
       <div className="absolute top-3 right-3 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-lg px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-md border border-slate-200 dark:border-slate-700 flex items-center gap-2">
         <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        {MOCK_DONORS.length} Active Donors Nearby
+        {MOCK_DONORS.length} Active Donors Near LPU
       </div>
 
       <MapContainer
-        center={[31.2560, 75.9551]}
-        zoom={13}
+        center={[31.2553, 75.9592]}
+        zoom={15}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
         zoomControl={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {MOCK_DONORS.map((donor) => {
