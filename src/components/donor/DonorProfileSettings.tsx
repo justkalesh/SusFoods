@@ -48,10 +48,10 @@ export function DonorProfileSettings() {
   }
 
   return (
-    <Card className="bg-slate-900 border-slate-800 shadow-2xl">
-      <CardHeader className="pb-6 border-b border-slate-800">
-        <CardTitle className="text-xl font-heading text-white">Business Profile</CardTitle>
-        <CardDescription className="text-slate-400">Manage your organization details and contact information</CardDescription>
+    <Card className="bg-white border-slate-200 shadow-lg">
+      <CardHeader className="pb-6 border-b border-slate-100">
+        <CardTitle className="text-xl font-heading text-slate-800">Business Profile</CardTitle>
+        <CardDescription className="text-slate-500">Manage your organization details and contact information</CardDescription>
       </CardHeader>
 
       <CardContent className="pt-8 space-y-8">
@@ -78,73 +78,73 @@ export function DonorProfileSettings() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Business Name */}
           <div className="space-y-2">
-            <Label htmlFor="dp-businessName" className="text-slate-300 font-medium text-sm">Business Name</Label>
+            <Label htmlFor="dp-businessName" className="text-slate-700 font-medium text-sm">Business Name</Label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="dp-businessName"
                 value={profile.businessName}
                 onChange={e => update("businessName", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Business Type */}
           <div className="space-y-2">
-            <Label className="text-slate-300 font-medium text-sm">Business Type</Label>
+            <Label className="text-slate-700 font-medium text-sm">Business Type</Label>
             <Select value={profile.businessType} onValueChange={v => { if (v) update("businessType", v) }}>
-              <SelectTrigger className="h-11 bg-slate-800/60 border-slate-700 text-white focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
+              <SelectTrigger className="h-11 bg-slate-50 border-slate-200 text-slate-900 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="restaurant" className="text-slate-200 focus:bg-emerald-500/20 focus:text-emerald-400">Restaurant</SelectItem>
-                <SelectItem value="campus_mess" className="text-slate-200 focus:bg-emerald-500/20 focus:text-emerald-400">Campus Mess</SelectItem>
-                <SelectItem value="banquet_hall" className="text-slate-200 focus:bg-emerald-500/20 focus:text-emerald-400">Banquet Hall</SelectItem>
-                <SelectItem value="supermarket" className="text-slate-200 focus:bg-emerald-500/20 focus:text-emerald-400">Supermarket</SelectItem>
+              <SelectContent className="bg-white border-slate-200">
+                <SelectItem value="restaurant">Restaurant</SelectItem>
+                <SelectItem value="campus_mess">Campus Mess</SelectItem>
+                <SelectItem value="banquet_hall">Banquet Hall</SelectItem>
+                <SelectItem value="supermarket">Supermarket</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Contact Person */}
           <div className="space-y-2">
-            <Label htmlFor="dp-contactName" className="text-slate-300 font-medium text-sm">Contact Person</Label>
+            <Label htmlFor="dp-contactName" className="text-slate-700 font-medium text-sm">Contact Person</Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="dp-contactName"
                 value={profile.contactName}
                 onChange={e => update("contactName", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label htmlFor="dp-phone" className="text-slate-300 font-medium text-sm">Phone Number</Label>
+            <Label htmlFor="dp-phone" className="text-slate-700 font-medium text-sm">Phone Number</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="dp-phone"
                 type="tel"
                 value={profile.phone}
                 onChange={e => update("phone", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Address - Full Width */}
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="dp-address" className="text-slate-300 font-medium text-sm">Address / Location</Label>
+            <Label htmlFor="dp-address" className="text-slate-700 font-medium text-sm">Address / Location</Label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
               <Input
                 id="dp-address"
                 value={profile.address}
                 onChange={e => update("address", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>

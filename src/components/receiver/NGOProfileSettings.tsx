@@ -43,10 +43,10 @@ export function NGOProfileSettings() {
   }
 
   return (
-    <Card className="bg-slate-900 border-slate-800 shadow-2xl">
-      <CardHeader className="pb-6 border-b border-slate-800">
-        <CardTitle className="text-xl font-heading text-white">Organization Profile</CardTitle>
-        <CardDescription className="text-slate-400">Manage your NGO details, verification info, and operating capacity</CardDescription>
+    <Card className="bg-white border-slate-200 shadow-lg">
+      <CardHeader className="pb-6 border-b border-slate-100">
+        <CardTitle className="text-xl font-heading text-slate-800">Organization Profile</CardTitle>
+        <CardDescription className="text-slate-500">Manage your NGO details, verification info, and operating capacity</CardDescription>
       </CardHeader>
 
       <CardContent className="pt-8 space-y-8">
@@ -73,88 +73,88 @@ export function NGOProfileSettings() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Organization Name */}
           <div className="space-y-2">
-            <Label htmlFor="np-orgName" className="text-slate-300 font-medium text-sm">Organization Name</Label>
+            <Label htmlFor="np-orgName" className="text-slate-700 font-medium text-sm">Organization Name</Label>
             <div className="relative">
-              <HeartHandshake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <HeartHandshake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="np-orgName"
                 value={profile.organizationName}
                 onChange={e => update("organizationName", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Registration Number */}
           <div className="space-y-2">
-            <Label htmlFor="np-regNumber" className="text-slate-300 font-medium text-sm">Registration / Trust Number</Label>
+            <Label htmlFor="np-regNumber" className="text-slate-700 font-medium text-sm">Registration / Trust Number</Label>
             <div className="relative">
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="np-regNumber"
                 value={profile.registrationNumber}
                 onChange={e => update("registrationNumber", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Contact Person */}
           <div className="space-y-2">
-            <Label htmlFor="np-contactName" className="text-slate-300 font-medium text-sm">Contact Person</Label>
+            <Label htmlFor="np-contactName" className="text-slate-700 font-medium text-sm">Contact Person</Label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="np-contactName"
                 value={profile.contactName}
                 onChange={e => update("contactName", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label htmlFor="np-phone" className="text-slate-300 font-medium text-sm">Phone Number</Label>
+            <Label htmlFor="np-phone" className="text-slate-700 font-medium text-sm">Phone Number</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="np-phone"
                 type="tel"
                 value={profile.phone}
                 onChange={e => update("phone", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>
 
           {/* Daily Feeding Capacity */}
           <div className="space-y-2">
-            <Label htmlFor="np-capacity" className="text-slate-300 font-medium text-sm">Daily Feeding Capacity</Label>
+            <Label htmlFor="np-capacity" className="text-slate-700 font-medium text-sm">Daily Feeding Capacity</Label>
             <div className="relative">
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 id="np-capacity"
                 type="number"
                 value={profile.dailyCapacity}
                 onChange={e => update("dailyCapacity", e.target.value)}
                 placeholder="e.g. 250"
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">people/day</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">people/day</span>
             </div>
           </div>
 
           {/* Address - Full Width */}
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="np-address" className="text-slate-300 font-medium text-sm">Address / Operating Area</Label>
+            <Label htmlFor="np-address" className="text-slate-700 font-medium text-sm">Address / Operating Area</Label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
               <Input
                 id="np-address"
                 value={profile.address}
                 onChange={e => update("address", e.target.value)}
-                className="h-11 pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
           </div>

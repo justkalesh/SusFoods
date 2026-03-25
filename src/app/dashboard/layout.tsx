@@ -38,14 +38,12 @@ export default function DashboardLayout({
       if (profile?.role) {
         setRole(profile.role as "business" | "ngo")
         
-        // If user is on the wrong portal, redirect them
         if (profile.role === "ngo" && pathname.startsWith("/dashboard/business")) {
           router.push("/dashboard/ngo")
         } else if (profile.role === "business" && pathname.startsWith("/dashboard/ngo")) {
           router.push("/dashboard/business")
         }
       } else {
-        // Fallback: check user_metadata
         const metaRole = user.user_metadata?.role
         if (metaRole === "ngo") {
           setRole("ngo")
@@ -61,6 +59,8 @@ export default function DashboardLayout({
   }, [])
 
   const handleSignOut = async () => {
+    const confirmed = window.confirm("Are you sure you want to sign out?")
+    if (!confirmed) return
     await supabase.auth.signOut()
     router.push("/auth")
     router.refresh()
@@ -91,6 +91,16 @@ export default function DashboardLayout({
           {portalName}
         </span>
         <div className="ml-auto flex items-center gap-1">
+          <Link href={`${portalPath}/profile`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Profile Settings"
+              className="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 h-9 w-9"
+            >
+              <UserCircle className="h-5 w-5" />
+            </Button>
+          </Link>
           <Button
             variant="ghost"
             size="icon"

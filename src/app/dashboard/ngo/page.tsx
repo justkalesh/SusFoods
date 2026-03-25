@@ -229,11 +229,11 @@ export default function NGODashboard() {
       </div>
 
       <Tabs defaultValue="map" className="space-y-4">
-        <TabsList className="w-full justify-start gap-1 bg-white border border-slate-200 shadow-sm rounded-xl p-1 h-auto flex-wrap">
-          <TabsTrigger value="map" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium"><Map className="h-4 w-4" /> Live Maps</TabsTrigger>
-          <TabsTrigger value="feed" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium">Secure Local Meals</TabsTrigger>
-          <TabsTrigger value="logistics" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium">Meal Journey Tracker</TabsTrigger>
-          <TabsTrigger value="sos" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium">Broadcast Urgent Needs</TabsTrigger>
+        <TabsList className="w-full justify-start gap-1.5 bg-white border border-slate-200 shadow-sm rounded-xl p-1.5 h-auto flex-wrap">
+          <TabsTrigger value="map" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all"><Map className="h-4 w-4" /> Live Maps</TabsTrigger>
+          <TabsTrigger value="feed" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all">Secure Local Meals</TabsTrigger>
+          <TabsTrigger value="logistics" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all">Meal Journey Tracker</TabsTrigger>
+          <TabsTrigger value="sos" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all">Broadcast Urgent Needs</TabsTrigger>
         </TabsList>
 
         {/* LIVE MAPS */}
