@@ -563,20 +563,22 @@ export default function RegisterPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="latitude" className="text-slate-700 font-medium">Latitude (optional)</Label>
+                        <Label htmlFor="latitude" className="text-slate-700 font-medium">Latitude</Label>
                         <Input 
                           id="latitude" 
                           placeholder="e.g. 12.9716"
+                          required
                           className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900" 
                           value={formData.latitude}
                           onChange={(e) => updateForm("latitude", e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="longitude" className="text-slate-700 font-medium">Longitude (optional)</Label>
+                        <Label htmlFor="longitude" className="text-slate-700 font-medium">Longitude</Label>
                         <Input 
                           id="longitude" 
                           placeholder="e.g. 77.5946"
+                          required
                           className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900" 
                           value={formData.longitude}
                           onChange={(e) => updateForm("longitude", e.target.value)}
