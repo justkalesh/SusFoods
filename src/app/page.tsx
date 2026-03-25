@@ -138,7 +138,7 @@ export default function LandingPage() {
                   Turn <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">Surplus Food</span> into Sustenance
                 </h1>
                 <p className="max-w-[600px] text-slate-600 text-lg md:text-xl leading-relaxed">
-                  Careit makes food donation simple. Connect your business with local nonprofits, reduce waste, fight hunger, and earn tax deductions—all in one smart platform.
+                  SuS-Food connects your business with local NGOs to redirect surplus food to those in need. Reduce your carbon footprint, secure automated tax deductions, and foster community goodwill—all in one smart platform.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Link href="/auth/register">
