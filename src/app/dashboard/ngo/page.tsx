@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { HeartHandshake, MapPin, AlertCircle, CheckCircle2, Radio, Loader2, Clock, Navigation } from "lucide-react"
+import DonorMap from "@/components/receiver/DonorMap"
 
 export default function NGODashboard() {
   const [feed, setFeed] = useState<FoodItem[]>([])
@@ -226,7 +227,21 @@ export default function NGODashboard() {
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-xl font-heading font-semibold text-slate-800">Receiver Portal</h2>
       </div>
-      
+
+      {/* Donor Map – Nearby Active Donors */}
+      <Card className="bg-white border-slate-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-emerald-600" />
+            <CardTitle className="text-slate-800 text-lg font-heading">Nearby Donors</CardTitle>
+          </div>
+          <CardDescription className="text-slate-500">Click a marker to view details and claim available food</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DonorMap />
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="feed" className="space-y-4">
         <TabsList className="glass-nav border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-900/50">
           <TabsTrigger value="feed">Secure Local Meals</TabsTrigger>
