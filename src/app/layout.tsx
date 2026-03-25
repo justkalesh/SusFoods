@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, DM_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 
 const fontSans = DM_Sans({
   variable: "--font-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.1)_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_80%_80%_at_50%_50%,transparent_20%,black_100%)] opacity-80 pointer-events-none"></div>
           </div>
           {children}
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>
