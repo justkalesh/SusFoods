@@ -269,60 +269,60 @@ export default function LandingPage() {
               <div className="group bg-slate-50 border border-slate-200 p-8 rounded-3xl hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
                 <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
-                  <ShieldCheck className="h-6 w-6" />
+                  <LineChart className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Liability Protection</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">Full Good Samaritan Act compliance protects your business. Donate confidently knowing you are legally covered.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Live Impact Metrics</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">Watch your impact grow in real time. Our dashboard instantly calculates CO₂ emissions saved and estimated tax write-offs based on total food rescued.</p>
               </div>
 
               {/* Feature 2 */}
               <div className="group bg-slate-50 border border-slate-200 p-8 rounded-3xl hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
                 <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6">
-                  <Receipt className="h-6 w-6" />
+                  <Clock className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Automatic Tax Receipts</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">Get documented receipts for every donation with itemized values. Maximize tax benefits with zero paperwork.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Inventory Countdowns</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">Keep track of surplus with dynamic HH:MM:SS Expiry Countdowns. Our system warns you when items enter a critical 12-hour expiration window.</p>
               </div>
 
               {/* Feature 3 */}
               <div className="group bg-slate-50 border border-slate-200 p-8 rounded-3xl hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
-                  <LineChart className="h-6 w-6" />
+                  <Radio className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Impact Reporting</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">See exactly where your food goes. Track pounds diverted, CO₂ avoided, and meals served for ESG goals.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Live Receiver Alerts</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">NGOs get an instant notification feed when food is listed nearby. Match supply with demand in seconds with our simulated WebSocket feed.</p>
               </div>
 
               {/* Feature 4 */}
               <div className="group bg-slate-50 border border-slate-200 p-8 rounded-3xl hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-red-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
                 <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-6">
-                  <Clock className="h-6 w-6" />
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Smart Expiry Tracking</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">Algorithmic safety windows ensure food is only claimed and consumed while it is perfectly safe and fresh.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Smart Scanner Integration</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">Upload invoices or images of bulk food—our multimodal Gemini AI automatically extracts the items, categorizes them, and estimates weight.</p>
               </div>
 
               {/* Feature 5 */}
               <div className="group bg-slate-50 border border-slate-200 p-8 rounded-3xl hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
                 <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
-                  <Radio className="h-6 w-6" />
+                  <Badge className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">SOS Radar System</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">NGOs can broadcast urgent needs directly to nearby donors when shelters run dangerously low on supplies.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Milestone Achievements</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">Gamify your donations. Unlock milestone badges as you rescue more food and share visually stunning summary cards directly on social media.</p>
               </div>
 
               {/* Feature 6 */}
               <div className="group bg-slate-50 border border-slate-200 p-8 rounded-3xl hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110"></div>
                 <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
-                  <Recycle className="h-6 w-6" />
+                  <Building2 className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Reduced Waste Costs</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">Divert food from the dumpster and lower your waste hauling fees. Many businesses save thousands annually.</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Vendor Mapping</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">A dedicated Receiver Portal that maps out all active donors nearby. NGOs can view available supply pools before plotting their collection routes.</p>
               </div>
             </div>
           </div>
@@ -338,7 +338,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-white border-y border-r border-slate-200 border-l-4 border-l-emerald-500 p-8 rounded-r-2xl shadow-sm relative">
                 <Quote className="absolute top-6 right-6 h-8 w-8 text-slate-100" />
-                <p className="text-slate-600 italic mb-6">"SuS-Food has played a pivotal role in scaling our rescue operations. The real-time alerts ensure we never miss high-quality prepared meals for our evening service."</p>
+                <p className="text-slate-600 italic mb-6">"SuS-Food's live radar feed completely changed our operations. We get instant WebSocket alerts the moment a banquet hall posts surplus food nearby, allowing us to claim it before it expires."</p>
                 <div>
                   <div className="font-bold text-slate-900">Sarah Jenkins</div>
                   <div className="text-sm text-emerald-600">Director, City Hope Shelter</div>
@@ -347,7 +347,7 @@ export default function LandingPage() {
 
               <div className="bg-white border-y border-r border-slate-200 border-l-4 border-l-amber-500 p-8 rounded-r-2xl shadow-sm relative">
                 <Quote className="absolute top-6 right-6 h-8 w-8 text-slate-100" />
-                <p className="text-slate-600 italic mb-6">"Our goal was reducing waste by 50%. In just 6 months using this platform across our 3 banquet halls, we've diverted 5,000kg of food and drastically cut disposal fees."</p>
+                <p className="text-slate-600 italic mb-6">"The impact dashboard is incredible. Tracking our CO₂ reductions and tax write-offs in real time has turned food donation from a chore into a core pillar of our corporate sustainability goals."</p>
                 <div>
                   <div className="font-bold text-slate-900">Marcus Thorne</div>
                   <div className="text-sm text-amber-600">Ops Manager, Fresh Market Banquets</div>
@@ -356,10 +356,10 @@ export default function LandingPage() {
 
               <div className="bg-white border-y border-r border-slate-200 border-l-4 border-l-emerald-500 p-8 rounded-r-2xl shadow-sm relative">
                 <Quote className="absolute top-6 right-6 h-8 w-8 text-slate-100" />
-                <p className="text-slate-600 italic mb-6">"The automated tax receipts alone make this worth it. We just snap a photo at the end of the shift, an NGO picks it up, and our documentation is handled automatically."</p>
+                <p className="text-slate-600 italic mb-6">"I love the milestone achievements. Unlocking the 'Sustainability Champion' badge and sharing that sleek card on our bakery's social media brought us so much positive community feedback!"</p>
                 <div>
                   <div className="font-bold text-slate-900">Elena Rostova</div>
-                  <div className="text-sm text-emerald-600">Owner, The Daily Bakehouse</div>
+                  <div className="text-sm text-emerald-600">Owner, Green Leaf Bakery</div>
                 </div>
               </div>
             </div>
@@ -411,7 +411,7 @@ export default function LandingPage() {
                 <span className="font-extrabold text-xl tracking-tight font-heading text-slate-900">SuS-Food</span>
               </Link>
               <p className="text-slate-600 text-sm max-w-xs leading-relaxed">
-                A smart B2B platform connecting food donors with NGOs to solve hunger and promote responsible consumption. Together, we can eliminate food waste.
+                SuS-Food: A smart B2B platform connecting food donors with NGOs. Reduce waste, track carbon impact, and build community resilience through seamless surplus redistribution.
               </p>
             </div>
             
