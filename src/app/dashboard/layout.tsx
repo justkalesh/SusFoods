@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
-import { Leaf, LogOut, Loader2 } from "lucide-react"
+import { Leaf, LogOut, Loader2, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function DashboardLayout({
@@ -90,15 +90,25 @@ export default function DashboardLayout({
         <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${role === "ngo" ? "bg-sky-100 text-sky-700" : "bg-emerald-100 text-emerald-700"}`}>
           {portalName}
         </span>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1">
+          <Link href={`${portalPath}#profile`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Profile Settings"
+              className="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 h-9 w-9"
+            >
+              <UserCircle className="h-5 w-5" />
+            </Button>
+          </Link>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={handleSignOut}
-            className="text-slate-500 hover:text-slate-900 gap-1.5 text-sm"
+            title="Sign out"
+            className="text-slate-500 hover:text-red-600 hover:bg-red-50 h-9 w-9"
           >
-            <LogOut className="h-4 w-4" />
-            Sign out
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </header>
