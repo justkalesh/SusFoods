@@ -55,6 +55,8 @@ export default function RegisterPage() {
     orgEmail: "",
     orgPhone: "",
     orgAddress: "",
+    latitude: "",
+    longitude: "",
     suiteNumber: ""
   })
 
@@ -557,6 +559,29 @@ export default function RegisterPage() {
                         value={formData.orgAddress}
                         onChange={(e) => updateForm("orgAddress", e.target.value)}
                       />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="latitude" className="text-slate-700 font-medium">Latitude (optional)</Label>
+                        <Input 
+                          id="latitude" 
+                          placeholder="e.g. 12.9716"
+                          className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900" 
+                          value={formData.latitude}
+                          onChange={(e) => updateForm("latitude", e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="longitude" className="text-slate-700 font-medium">Longitude (optional)</Label>
+                        <Input 
+                          id="longitude" 
+                          placeholder="e.g. 77.5946"
+                          className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900" 
+                          value={formData.longitude}
+                          onChange={(e) => updateForm("longitude", e.target.value)}
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">

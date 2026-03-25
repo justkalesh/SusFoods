@@ -54,6 +54,8 @@ export async function registerOrganization(formData: any) {
       email: formData.orgEmail,
       phone: formData.orgPhone,
       address: formData.orgAddress,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       country: formData.country,
       suite_number: formData.suiteNumber,
       type: formData.orgType,
