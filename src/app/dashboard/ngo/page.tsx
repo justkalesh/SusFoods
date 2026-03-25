@@ -14,8 +14,9 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { HeartHandshake, MapPin, AlertCircle, CheckCircle2, Radio, Loader2, Clock, Navigation } from "lucide-react"
+import { HeartHandshake, MapPin, AlertCircle, CheckCircle2, Radio, Loader2, Clock, Navigation, Settings } from "lucide-react"
 import DonorMap from "@/components/receiver/DonorMap"
+import { NGOProfileSettings } from "@/components/receiver/NGOProfileSettings"
 
 export default function NGODashboard() {
   const [feed, setFeed] = useState<FoodItem[]>([])
@@ -247,6 +248,7 @@ export default function NGODashboard() {
           <TabsTrigger value="feed">Secure Local Meals</TabsTrigger>
           <TabsTrigger value="logistics">Meal Journey Tracker</TabsTrigger>
           <TabsTrigger value="sos">Broadcast Urgent Needs</TabsTrigger>
+          <TabsTrigger value="profile" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Profile</TabsTrigger>
         </TabsList>
         
         {/* LIVE CLAIMING FEED */}
@@ -447,6 +449,11 @@ export default function NGODashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* PROFILE SETTINGS */}
+        <TabsContent value="profile">
+          <NGOProfileSettings />
         </TabsContent>
       </Tabs>
     </div>

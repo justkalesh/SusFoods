@@ -13,9 +13,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, Leaf, Recycle, Clock } from "lucide-react"
+import { TrendingUp, Leaf, Recycle, Clock, Settings } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { SmartScanner } from "@/components/SmartScanner"
+import { DonorProfileSettings } from "@/components/donor/DonorProfileSettings"
 
 const impactData = [
   { month: "Jan", co2: 400 },
@@ -156,6 +157,7 @@ export default function BusinessDashboard() {
           <TabsTrigger value="overview">Your Community Impact</TabsTrigger>
           <TabsTrigger value="smart-scan">Auto-Scan Invoice</TabsTrigger>
           <TabsTrigger value="inventory">Manual Entry</TabsTrigger>
+          <TabsTrigger value="profile" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Profile</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -318,6 +320,11 @@ export default function BusinessDashboard() {
               </form>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* PROFILE SETTINGS */}
+        <TabsContent value="profile">
+          <DonorProfileSettings />
         </TabsContent>
       </Tabs>
     </div>
