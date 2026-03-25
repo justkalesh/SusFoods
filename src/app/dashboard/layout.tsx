@@ -91,16 +91,6 @@ export default function DashboardLayout({
           {portalName}
         </span>
         <div className="ml-auto flex items-center gap-1">
-          <Link href={`${portalPath}#profile`}>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Profile Settings"
-              className="text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 h-9 w-9"
-            >
-              <UserCircle className="h-5 w-5" />
-            </Button>
-          </Link>
           <Button
             variant="ghost"
             size="icon"

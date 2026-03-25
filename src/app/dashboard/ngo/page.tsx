@@ -14,9 +14,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { HeartHandshake, MapPin, AlertCircle, CheckCircle2, Radio, Loader2, Clock, Navigation, Settings } from "lucide-react"
+import { HeartHandshake, MapPin, AlertCircle, CheckCircle2, Radio, Loader2, Clock, Navigation, Map } from "lucide-react"
 import DonorMap from "@/components/receiver/DonorMap"
-import { NGOProfileSettings } from "@/components/receiver/NGOProfileSettings"
 
 export default function NGODashboard() {
   const [feed, setFeed] = useState<FoodItem[]>([])
@@ -229,27 +228,29 @@ export default function NGODashboard() {
         <h2 className="text-xl font-heading font-semibold text-slate-800">Receiver Portal</h2>
       </div>
 
-      {/* Donor Map – Nearby Active Donors */}
-      <Card className="bg-white border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-emerald-600" />
-            <CardTitle className="text-slate-800 text-lg font-heading">Nearby Donors</CardTitle>
-          </div>
-          <CardDescription className="text-slate-500">Click a marker to view details and claim available food</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DonorMap />
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="feed" className="space-y-4">
-        <TabsList className="glass-nav border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-900/50">
-          <TabsTrigger value="feed">Secure Local Meals</TabsTrigger>
-          <TabsTrigger value="logistics">Meal Journey Tracker</TabsTrigger>
-          <TabsTrigger value="sos">Broadcast Urgent Needs</TabsTrigger>
-          <TabsTrigger value="profile" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Profile</TabsTrigger>
+      <Tabs defaultValue="map" className="space-y-4">
+        <TabsList className="w-full justify-start gap-1 bg-white border border-slate-200 shadow-sm rounded-xl p-1 h-auto flex-wrap">
+          <TabsTrigger value="map" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium"><Map className="h-4 w-4" /> Live Maps</TabsTrigger>
+          <TabsTrigger value="feed" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium">Secure Local Meals</TabsTrigger>
+          <TabsTrigger value="logistics" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium">Meal Journey Tracker</TabsTrigger>
+          <TabsTrigger value="sos" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 text-sm font-medium">Broadcast Urgent Needs</TabsTrigger>
         </TabsList>
+
+        {/* LIVE MAPS */}
+        <TabsContent value="map">
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-emerald-600" />
+                <CardTitle className="text-slate-800 text-lg font-heading">Nearby Donors</CardTitle>
+              </div>
+              <CardDescription className="text-slate-500">Click a marker to view details and claim available food</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DonorMap />
+            </CardContent>
+          </Card>
+        </TabsContent>
         
         {/* LIVE CLAIMING FEED */}
         <TabsContent value="feed" className="space-y-4">
@@ -449,11 +450,6 @@ export default function NGODashboard() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* PROFILE SETTINGS */}
-        <TabsContent value="profile">
-          <NGOProfileSettings />
         </TabsContent>
       </Tabs>
     </div>
