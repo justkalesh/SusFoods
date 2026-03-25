@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, Leaf, Recycle, Clock } from "lucide-react"
+import { TrendingUp, Leaf, Recycle, Clock, Package, Tag, Scale, CalendarClock, Sparkles, ArrowRight } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { SmartScanner } from "@/components/SmartScanner"
 
@@ -270,54 +270,146 @@ export default function BusinessDashboard() {
         </TabsContent>
 
         <TabsContent value="inventory" className="space-y-4">
-          <Card className="max-w-2xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-white/5 border-b-2 border-b-emerald-500/50 shadow-inner">
-            <CardHeader>
-              <CardTitle className="text-slate-900 dark:text-slate-100 font-heading">Rescue Surplus Batch</CardTitle>
-              <CardDescription className="text-slate-600 dark:text-slate-400">
-                List your available food so NGOs nearby can claim it in real time.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogInventory} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="itemName" className="text-slate-700 dark:text-slate-300">Item Name</Label>
-                    <Input id="itemName" name="itemName" placeholder="e.g. 50 Sandwiches" required className="bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus-visible:ring-emerald-500" />
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Form Card */}
+            <Card className="lg:col-span-2 bg-white border-slate-200 shadow-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                    <Package className="h-5 w-5 text-white" />
                   </div>
-                  <div className="space-y-2 flex flex-col justify-end">
-                    <Label htmlFor="category" className="text-slate-700 dark:text-slate-300">Category</Label>
-                    <select 
-                      id="category" 
-                      name="category" 
-                      required 
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="Prepared Meals" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">Prepared Meals</option>
-                      <option value="Produce" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">Produce</option>
-                      <option value="Bakery" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">Bakery</option>
-                      <option value="Dairy" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">Dairy</option>
-                      <option value="Other" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">Other</option>
-                    </select>
+                  <div>
+                    <CardTitle className="text-slate-800 font-heading text-lg">Rescue Surplus Batch</CardTitle>
+                    <CardDescription className="text-slate-500 text-sm">List your available food so nearby NGOs can claim it in real time.</CardDescription>
                   </div>
                 </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity" className="text-slate-700 dark:text-slate-300">Quantity (in kg or portions)</Label>
-                    <Input id="quantity" name="quantity" type="number" min="1" placeholder="10" required className="bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus-visible:ring-emerald-500" />
+              </CardHeader>
+              <CardContent className="pt-6">
+                <form onSubmit={handleLogInventory} className="space-y-5">
+                  <div className="grid gap-5 md:grid-cols-2">
+                    {/* Item Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="itemName" className="text-slate-700 font-medium text-sm flex items-center gap-1.5">
+                        <Package className="h-3.5 w-3.5 text-emerald-600" /> Item Name
+                      </Label>
+                      <Input 
+                        id="itemName" 
+                        name="itemName" 
+                        placeholder="e.g. 50 Sandwiches" 
+                        required 
+                        className="h-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all" 
+                      />
+                    </div>
+
+                    {/* Category */}
+                    <div className="space-y-2">
+                      <Label htmlFor="category" className="text-slate-700 font-medium text-sm flex items-center gap-1.5">
+                        <Tag className="h-3.5 w-3.5 text-emerald-600" /> Category
+                      </Label>
+                      <select 
+                        id="category" 
+                        name="category" 
+                        required 
+                        className="flex h-11 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
+                      >
+                        <option value="Prepared Meals">🍱 Prepared Meals</option>
+                        <option value="Produce">🥬 Produce</option>
+                        <option value="Bakery">🍞 Bakery</option>
+                        <option value="Dairy">🥛 Dairy</option>
+                        <option value="Other">📦 Other</option>
+                      </select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="consumeUntil" className="text-slate-700 dark:text-slate-300">Safe to Consume Until</Label>
-                    <Input id="consumeUntil" name="consumeUntil" type="datetime-local" required className="bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus-visible:ring-emerald-500 scheme-light dark:scheme-dark" />
+                  
+                  <div className="grid gap-5 md:grid-cols-2">
+                    {/* Quantity */}
+                    <div className="space-y-2">
+                      <Label htmlFor="quantity" className="text-slate-700 font-medium text-sm flex items-center gap-1.5">
+                        <Scale className="h-3.5 w-3.5 text-emerald-600" /> Quantity
+                      </Label>
+                      <div className="relative">
+                        <Input 
+                          id="quantity" 
+                          name="quantity" 
+                          type="number" 
+                          min="1" 
+                          placeholder="10" 
+                          required 
+                          className="h-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all pr-20" 
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">kg / portions</span>
+                      </div>
+                    </div>
+
+                    {/* Consume Until */}
+                    <div className="space-y-2">
+                      <Label htmlFor="consumeUntil" className="text-slate-700 font-medium text-sm flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-emerald-600" /> Safe Until
+                      </Label>
+                      <Input 
+                        id="consumeUntil" 
+                        name="consumeUntil" 
+                        type="datetime-local" 
+                        required 
+                        className="h-11 bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all" 
+                      />
+                    </div>
                   </div>
+                  
+                  <div className="pt-2">
+                    <Button type="submit" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-8 h-11 font-medium shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-lg gap-2">
+                      <Sparkles className="h-4 w-4" /> List Donation
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Side Info Panel */}
+            <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 border-0 shadow-lg shadow-emerald-500/15 text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -ml-8 -mb-8 pointer-events-none"></div>
+              <CardContent className="pt-8 pb-8 space-y-6 relative z-10">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-sm mb-4">
+                    <Leaf className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-heading font-bold mb-2">Make an Impact</h3>
+                  <p className="text-emerald-100 text-sm leading-relaxed">Every batch you list helps feed families in your community and reduces food waste.</p>
                 </div>
                 
-                <Button type="submit" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all">
-                  List Donation
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                    <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Instant Matching</p>
+                      <p className="text-xs text-emerald-200">NGOs get notified instantly</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                    <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                      <Recycle className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">CO₂ Tracked</p>
+                      <p className="text-xs text-emerald-200">Every kg saves ~2.5 kg CO₂</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                    <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                      <TrendingUp className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Tax Benefits</p>
+                      <p className="text-xs text-emerald-200">Auto-generated 80G receipts</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
