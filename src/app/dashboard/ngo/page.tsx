@@ -225,11 +225,11 @@ export default function NGODashboard() {
   return (
     <div className="flex-1 space-y-4 fade-in">
       <Tabs defaultValue="map" className="space-y-4">
-        <TabsList className="w-full justify-start gap-2 bg-white border border-slate-200 shadow-sm rounded-xl p-2 h-auto flex-wrap">
-          <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all"><Map className="h-4.5 w-4.5" /> Live Maps</TabsTrigger>
-          <TabsTrigger value="feed" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all">Secure Local Meals</TabsTrigger>
-          <TabsTrigger value="logistics" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all">Meal Journey Tracker</TabsTrigger>
-          <TabsTrigger value="sos" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all">Broadcast Urgent Needs</TabsTrigger>
+        <TabsList className="w-full justify-start gap-2 bg-slate-100 border border-slate-200 rounded-xl p-2 h-auto flex-wrap">
+          <TabsTrigger value="map" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all"><Map className="h-4 w-4" /> Live Maps</TabsTrigger>
+          <TabsTrigger value="feed" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Secure Local Meals</TabsTrigger>
+          <TabsTrigger value="logistics" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Meal Journey Tracker</TabsTrigger>
+          <TabsTrigger value="sos" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Broadcast Urgent Needs</TabsTrigger>
         </TabsList>
 
         {/* LIVE MAPS */}

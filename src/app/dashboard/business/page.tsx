@@ -148,10 +148,10 @@ export default function BusinessDashboard() {
   return (
     <div className="flex-1 space-y-4 fade-in">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="w-full justify-start gap-2 bg-white border border-slate-200 shadow-sm rounded-xl p-2 h-auto flex-wrap">
-          <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all">Your Community Impact</TabsTrigger>
-          <TabsTrigger value="smart-scan" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all">Auto-Scan Invoice</TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-5 py-3 text-base font-medium text-slate-600 transition-all">Manual Entry</TabsTrigger>
+        <TabsList className="w-full justify-start gap-2 bg-slate-100 border border-slate-200 rounded-xl p-2 h-auto flex-wrap">
+          <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Your Community Impact</TabsTrigger>
+          <TabsTrigger value="smart-scan" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Auto-Scan Invoice</TabsTrigger>
+          <TabsTrigger value="inventory" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Manual Entry</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
