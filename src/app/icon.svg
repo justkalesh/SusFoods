@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Left leaf -->
+  <path d="M205 95 C120 110, 55 185, 65 290 C75 370, 140 410, 210 380 C250 365, 270 330, 275 290 C285 210, 250 140, 205 95Z" fill="#a3d464" stroke="#1a7a4a" stroke-width="12"/>
+  <path d="M140 340 C155 280, 175 220, 210 160 C195 230, 180 290, 175 340" fill="none" stroke="#1a7a4a" stroke-width="8" stroke-linecap="round"/>
+  <!-- Right leaf -->
+  <path d="M310 70 C400 80, 470 155, 460 265 C450 350, 385 400, 310 370 C270 355, 248 320, 245 275 C235 195, 265 120, 310 70Z" fill="#a3d464" stroke="#1a7a4a" stroke-width="12"/>
+  <path d="M380 320 C365 260, 345 200, 310 140 C325 210, 340 270, 345 320" fill="none" stroke="#1a7a4a" stroke-width="8" stroke-linecap="round"/>
+</svg>
