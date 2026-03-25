@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useState, useEffect } from "react"
 import { createClient } from "@/utils/supabase/client"
 import { MOCK_ACTIVE_DONATIONS, MOCK_CLAIMS, MOCK_SOS_APPEALS, FoodItem, SOSAppeal, Claim } from "@/lib/mock-data"
