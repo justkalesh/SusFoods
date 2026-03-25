@@ -13,10 +13,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, Leaf, Recycle, Clock, Settings } from "lucide-react"
+import { TrendingUp, Leaf, Recycle, Clock } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { SmartScanner } from "@/components/SmartScanner"
-import { DonorProfileSettings } from "@/components/donor/DonorProfileSettings"
 
 const impactData = [
   { month: "Jan", co2: 400 },
@@ -153,11 +152,10 @@ export default function BusinessDashboard() {
       </div>
       
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="glass-nav border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-900/50">
-          <TabsTrigger value="overview">Your Community Impact</TabsTrigger>
-          <TabsTrigger value="smart-scan">Auto-Scan Invoice</TabsTrigger>
-          <TabsTrigger value="inventory">Manual Entry</TabsTrigger>
-          <TabsTrigger value="profile" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Profile</TabsTrigger>
+        <TabsList className="w-full justify-start gap-1.5 bg-white border border-slate-200 shadow-sm rounded-xl p-1.5 h-auto flex-wrap">
+          <TabsTrigger value="overview" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all">Your Community Impact</TabsTrigger>
+          <TabsTrigger value="smart-scan" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all">Auto-Scan Invoice</TabsTrigger>
+          <TabsTrigger value="inventory" className="gap-1.5 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-emerald-500/30 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition-all">Manual Entry</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -320,11 +318,6 @@ export default function BusinessDashboard() {
               </form>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* PROFILE SETTINGS */}
-        <TabsContent value="profile">
-          <DonorProfileSettings />
         </TabsContent>
       </Tabs>
     </div>
