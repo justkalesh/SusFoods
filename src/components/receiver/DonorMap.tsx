@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
+import { createClient } from "@/utils/supabase/client"
 
-// ── Mock Donor Data ──────────────────────────────────────────
-interface Donor {
+// ── Types ────────────────────────────────────────────────────
+interface DonorPin {
   id: string
   businessName: string
   foodType: string
@@ -14,12 +15,6 @@ interface Donor {
   lat: number
   lng: number
 }
-
-const MOCK_DONORS: Donor[] = [
-  { id: "d1", businessName: "Campus Mess Court",       foodType: "Dal Makhani",     quantity: "50 portions", lat: 31.2540, lng: 75.9580 },
-  { id: "d2", businessName: "Law Gate Kiosk",          foodType: "Bread Loaves",    quantity: "20 loaves",   lat: 31.2585, lng: 75.9510 },
-  { id: "d3", businessName: "Phagwara Banquet Hall",   foodType: "Mixed Veg",       quantity: "10 kg",       lat: 31.2490, lng: 75.9650 },
-]
 
 // ── Custom Marker Icon ──────────────────────────────────────
 const donorIcon = new L.Icon({
@@ -34,22 +29,83 @@ const donorIcon = new L.Icon({
 
 // ── Map Component (client-only) ─────────────────────────────
 function DonorMapInner() {
+  const [donors, setDonors] = useState<DonorPin[]>([])
+  const [loading, setLoading] = useState(true)
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set())
+  const supabase = createClient()
 
-  const handleClaim = (donorId: string) => {
+  useEffect(() => {
+    async function fetchDonors() {
+      // Fetch available food items joined with donor profiles for location + name
+      const { data, error } = await supabase
+        .from('food_items')
+        .select('id, item_name, category, quantity_kg, donor_id, profiles(organization_name, latitude, longitude)')
+        .eq('status', 'Available')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error("Error fetching map donors:", error)
+        setLoading(false)
+        return
+      }
+
+      if (data) {
+        const pins: DonorPin[] = data
+          .filter((item: any) => {
+            const profile = item.profiles
+            return profile?.latitude && profile?.longitude
+          })
+          .map((item: any) => ({
+            id: item.id,
+            businessName: item.profiles?.organization_name || "Local Donor",
+            foodType: item.item_name,
+            quantity: `${item.quantity_kg} kg`,
+            lat: Number(item.profiles.latitude),
+            lng: Number(item.profiles.longitude),
+          }))
+        setDonors(pins)
+      }
+      setLoading(false)
+    }
+
+    fetchDonors()
+  }, [])
+
+  const handleClaim = async (donorId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert("Please log in to claim food.")
+      return
+    }
+
+    const { error: claimError } = await supabase.from('claims').insert([{
+      food_item_id: donorId,
+      ngo_id: user.id,
+      status: 'Pending'
+    }])
+
+    if (claimError) {
+      alert("Failed to claim: " + claimError.message)
+      return
+    }
+
+    await supabase.from('food_items').update({ status: 'Claimed' }).eq('id', donorId)
     setClaimedIds(prev => new Set(prev).add(donorId))
   }
+
+  // Default center: LPU campus
+  const defaultCenter: [number, number] = [31.2553, 75.9592]
 
   return (
     <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 relative">
       {/* Legend overlay */}
       <div className="absolute top-3 right-3 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-lg px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-md border border-slate-200 dark:border-slate-700 flex items-center gap-2">
         <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        {MOCK_DONORS.length} Active Donors Near LPU
+        {loading ? "Loading donors…" : `${donors.length} Active Donor${donors.length !== 1 ? 's' : ''}`}
       </div>
 
       <MapContainer
-        center={[31.2553, 75.9592]}
+        center={defaultCenter}
         zoom={15}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
@@ -60,7 +116,7 @@ function DonorMapInner() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {MOCK_DONORS.map((donor) => {
+        {donors.map((donor) => {
           const isClaimed = claimedIds.has(donor.id)
 
           return (

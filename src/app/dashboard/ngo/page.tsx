@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/utils/supabase/client"
-import { MOCK_ACTIVE_DONATIONS, MOCK_CLAIMS, MOCK_SOS_APPEALS, FoodItem, SOSAppeal, Claim } from "@/lib/mock-data"
+import { FoodItem, SOSAppeal, Claim } from "@/lib/mock-data"
 import { calculateTimeRemaining } from "@/lib/engine"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -23,141 +23,162 @@ export default function NGODashboard() {
   const [appeals, setAppeals] = useState<SOSAppeal[]>([])
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const supabase = createClient()
+
+  // Helper: convert a DB food_item row to our FoodItem type
+  const mapFoodItem = (item: any): FoodItem => ({
+    id: item.id,
+    donorId: item.donor_id,
+    donorName: item.profiles?.organization_name || "Local Business",
+    itemName: item.item_name,
+    category: item.category as any,
+    quantityKg: item.quantity_kg,
+    safeToConsumeUntil: item.safe_to_consume_until,
+    status: item.status as any,
+  })
 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        // If not logged in, we might still want to show something or error out, but we'll proceed
+      const { data: { user } } = await supabase.auth.getUser()
         
-        // Fetch feed (available food)
-        const { data: foodData, error: foodError } = await supabase
-          .from('food_items')
-          .select('*')
-          .eq('status', 'Available')
-          .order('created_at', { ascending: false })
-          
-        if (foodError) throw foodError
-
-        if (foodData && foodData.length > 0) {
-          setFeed(foodData.map(item => ({
-            id: item.id,
-            donorId: item.donor_id,
-            donorName: "Local Business", 
-            itemName: item.item_name,
-            category: item.category as any,
-            quantityKg: item.quantity_kg,
-            safeToConsumeUntil: item.safe_to_consume_until,
-            status: item.status as any,
-          })))
-        } else {
-          setFeed([])
-        }
-
-        // Fetch claims for user
-        if (user) {
-          const { data: claimsData } = await supabase
-            .from('claims')
-            .select('*')
-            .eq('ngo_id', user.id)
-            .order('claimed_at', { ascending: false })
-            
-          if (claimsData) {
-            setClaims(claimsData.map(c => ({
-              id: c.id,
-              foodItemId: c.food_item_id,
-              ngoId: c.ngo_id,
-              status: c.status as any,
-              claimedAt: c.claimed_at,
-            })))
-          }
-        }
-
-        // Fetch SOS appeals
-        const { data: appealsData } = await supabase
-          .from('sos_appeals')
-          .select('*')
-          .order('date_posted', { ascending: false })
-          
-        if (appealsData && appealsData.length > 0) {
-          setAppeals(appealsData.map(a => ({
-            id: a.id,
-            ngoId: a.ngo_id,
-            ngoName: "Community NGO",
-            requestText: a.request_text,
-            urgency: a.urgency as any,
-            datePosted: a.date_posted,
-          })))
-        } else {
-          setAppeals([])
-        }
-
-      } catch (err) {
-        console.error("Error fetching data, using mock:", err)
-        setFeed(MOCK_ACTIVE_DONATIONS.filter(d => d.status === "Available"))
-        setClaims(MOCK_CLAIMS)
-        setAppeals(MOCK_SOS_APPEALS)
-      } finally {
-        setLoading(false)
+      // Fetch feed (available food) with donor profile for name
+      const { data: foodData, error: foodError } = await supabase
+        .from('food_items')
+        .select('*, profiles(organization_name)')
+        .eq('status', 'Available')
+        .order('created_at', { ascending: false })
+        
+      if (foodError) {
+        console.error("Error fetching food feed:", foodError)
+        setFetchError("Failed to load the donation feed.")
+      } else {
+        setFeed((foodData || []).map(mapFoodItem))
       }
+
+      // Fetch claims for this user
+      if (user) {
+        const { data: claimsData } = await supabase
+          .from('claims')
+          .select('*')
+          .eq('ngo_id', user.id)
+          .order('claimed_at', { ascending: false })
+          
+        if (claimsData) {
+          setClaims(claimsData.map(c => ({
+            id: c.id,
+            foodItemId: c.food_item_id,
+            ngoId: c.ngo_id,
+            status: c.status as any,
+            claimedAt: c.claimed_at,
+          })))
+        }
+      }
+
+      // Fetch SOS appeals
+      const { data: appealsData } = await supabase
+        .from('sos_appeals')
+        .select('*')
+        .order('date_posted', { ascending: false })
+        
+      if (appealsData) {
+        setAppeals(appealsData.map(a => ({
+          id: a.id,
+          ngoId: a.ngo_id,
+          ngoName: "Community NGO",
+          requestText: a.request_text,
+          urgency: a.urgency as any,
+          datePosted: a.date_posted,
+        })))
+      }
+
+      setLoading(false)
     }
 
     fetchData()
+
+    // ── Realtime subscription for live feed updates ──
+    const channel = supabase
+      .channel('food_items_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'food_items' },
+        async (payload) => {
+          // Fetch the full row with the profile join for the donor name
+          const { data } = await supabase
+            .from('food_items')
+            .select('*, profiles(organization_name)')
+            .eq('id', payload.new.id)
+            .single()
+          
+          if (data && data.status === 'Available') {
+            setFeed(prev => [mapFoodItem(data), ...prev])
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'food_items' },
+        (payload) => {
+          const updated = payload.new as any
+          if (updated.status !== 'Available') {
+            // Item was claimed/delivered — remove from feed
+            setFeed(prev => prev.filter(f => f.id !== updated.id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const handleClaim = async (item: FoodItem) => {
     setClaimingId(item.id)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not logged in");
 
-      // 1. Insert claim
-      let { error: claimError } = await supabase.from('claims').insert([{
-        food_item_id: item.id,
-        ngo_id: user.id,
-        status: 'Pending'
-      }])
-      
-      if (claimError && claimError.code === '23503') {
-        await supabase.from('profiles').insert([{
-           id: user.id,
-           role: 'ngo',
-           name: user.email?.split('@')[0] || 'Legacy NGO',
-           organization_name: 'My NGO'
-        }]);
-        const retry = await supabase.from('claims').insert([{
-          food_item_id: item.id,
-          ngo_id: user.id,
-          status: 'Pending'
-        }]);
-        claimError = retry.error;
-      }
-      
-      if (claimError) throw claimError;
-
-      // 2. Update food item status
-      const { error: updateError } = await supabase
-        .from('food_items')
-        .update({ status: 'Claimed' })
-        .eq('id', item.id)
-
-      if (updateError) throw updateError;
-      
-      // Update local state by refetching or just mutating
-      setFeed(feed.filter(f => f.id !== item.id))
-      setClaims([{
-        id: `temp-${Date.now()}`,
-        foodItemId: item.id,
-        ngoId: user.id,
-        status: 'Pending',
-        claimedAt: new Date().toISOString()
-      }, ...claims])
-
-    } catch(err) {
-       console.error("Failed to claim:", err)
-       alert("Failed to claim. Check your connection or database setup.")
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert("You must be logged in to claim donations.")
+      setClaimingId(null)
+      return
     }
+
+    // 1. Insert claim
+    const { error: claimError } = await supabase.from('claims').insert([{
+      food_item_id: item.id,
+      ngo_id: user.id,
+      status: 'Pending'
+    }])
+    
+    if (claimError) {
+      console.error("Claim error:", claimError)
+      alert("Failed to claim: " + claimError.message)
+      setClaimingId(null)
+      return
+    }
+
+    // 2. Update food item status
+    const { error: updateError } = await supabase
+      .from('food_items')
+      .update({ status: 'Claimed' })
+      .eq('id', item.id)
+
+    if (updateError) {
+      console.error("Update error:", updateError)
+      alert("Claim recorded but failed to update item status.")
+    }
+    
+    // Update local state
+    setFeed(feed.filter(f => f.id !== item.id))
+    setClaims([{
+      id: `temp-${Date.now()}`,
+      foodItemId: item.id,
+      ngoId: user.id,
+      status: 'Pending',
+      claimedAt: new Date().toISOString()
+    }, ...claims])
+
     setClaimingId(null)
   }
 
@@ -167,50 +188,35 @@ export default function NGODashboard() {
     const requestText = formData.get("requestText") as string
     const urgency = formData.get("urgency") as string
     
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not logged in");
-
-      let { data, error } = await supabase.from('sos_appeals').insert([{
-        ngo_id: user.id,
-        request_text: requestText,
-        urgency: urgency
-      }]).select().single()
-
-      if (error && error.code === '23503') {
-        await supabase.from('profiles').insert([{
-           id: user.id,
-           role: 'ngo',
-           name: user.email?.split('@')[0] || 'Legacy NGO',
-           organization_name: 'My NGO'
-        }]);
-        
-        const retry = await supabase.from('sos_appeals').insert([{
-          ngo_id: user.id,
-          request_text: requestText,
-          urgency: urgency
-        }]).select().single()
-        data = retry.data;
-        error = retry.error;
-      }
-
-      if (error) throw error;
-      
-      if (data) {
-        setAppeals([{
-          id: data.id,
-          ngoId: data.ngo_id,
-          ngoName: "Your NGO",
-          requestText: data.request_text,
-          urgency: data.urgency as any,
-          datePosted: data.date_posted
-        }, ...appeals])
-      }
-      e.currentTarget.reset()
-    } catch(err) {
-      console.error("Failed to broadcast SOS:", err)
-      alert("Failed to broadcast SOS. Check if database tables exist.")
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert("You must be logged in to broadcast an SOS.")
+      return
     }
+
+    const { data, error } = await supabase.from('sos_appeals').insert([{
+      ngo_id: user.id,
+      request_text: requestText,
+      urgency: urgency
+    }]).select().single()
+
+    if (error) {
+      console.error("SOS error:", error)
+      alert("Failed to broadcast SOS: " + error.message)
+      return
+    }
+    
+    if (data) {
+      setAppeals([{
+        id: data.id,
+        ngoId: data.ngo_id,
+        ngoName: "Your NGO",
+        requestText: data.request_text,
+        urgency: data.urgency as any,
+        datePosted: data.date_posted
+      }, ...appeals])
+    }
+    e.currentTarget.reset()
   }
 
   const getBadgeColor = (statusColor: string) => {
@@ -250,12 +256,18 @@ export default function NGODashboard() {
         
         {/* LIVE CLAIMING FEED */}
         <TabsContent value="feed" className="space-y-4">
+          {fetchError && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
+              <AlertCircle className="h-4 w-4 shrink-0" /> {fetchError}
+            </div>
+          )}
+
           <div className="flex items-center space-x-2 pb-2">
             <span className="relative flex h-3 w-3 mr-1">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <span className="text-sm font-medium text-emerald-500">10km Operational Range</span>
+            <span className="text-sm font-medium text-emerald-500">Live — Real-time updates enabled</span>
           </div>
           
           <ScrollArea className="h-[600px] rounded-xl border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-4">
@@ -307,7 +319,7 @@ export default function NGODashboard() {
                 )
               })}
               
-              {feed.length === 0 && (
+              {feed.length === 0 && !fetchError && (
                 <div className="col-span-full py-12 text-center text-slate-500 flex flex-col items-center">
                   <CheckCircle2 className="h-12 w-12 text-emerald-500/50 mb-4" />
                   <p>All clear! No pending donations in your area right now.</p>
@@ -441,6 +453,9 @@ export default function NGODashboard() {
                         <p className="text-xs text-slate-600 dark:text-slate-500 pl-2 mt-2">{appeal.ngoName}</p>
                       </div>
                     ))}
+                    {appeals.length === 0 && (
+                      <div className="text-center text-slate-500 py-6">No SOS appeals yet.</div>
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>

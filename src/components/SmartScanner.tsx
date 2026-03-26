@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, RefreshCw, ScanLine, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -36,6 +37,7 @@ export function SmartScanner() {
   const [saving, setSaving] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -109,14 +111,47 @@ export function SmartScanner() {
   };
 
   const handleConfirm = async () => {
+    if (!extractedData || extractedData.length === 0) return;
+
     setSaving(true);
-    // Simulate database save
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
-    // Reset state after save
-    setExtractedData(null);
-    setFile(null);
-    alert("Inventory updated successfully!");
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("You must be logged in to save inventory.");
+        setSaving(false);
+        return;
+      }
+
+      // Map each extracted item to a food_items row
+      const rows = extractedData.map(item => ({
+        donor_id: user.id,
+        item_name: item.itemName,
+        category: "Other" as const, // AI-scanned items default to "Other"
+        quantity_kg: item.quantity,
+        safe_to_consume_until: new Date(item.predictedExpiryDate).toISOString(),
+        status: "Available" as const,
+      }));
+
+      const { error } = await supabase.from("food_items").insert(rows);
+
+      if (error) {
+        console.error("Insert error:", error);
+        alert("Failed to save inventory: " + error.message);
+        setSaving(false);
+        return;
+      }
+
+      // Success — reset state
+      setExtractedData(null);
+      setFile(null);
+      alert(`✅ ${rows.length} item${rows.length > 1 ? "s" : ""} added to your inventory successfully!`);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An unexpected error occurred while saving.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -278,7 +313,7 @@ export function SmartScanner() {
                 className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all min-w-[200px]"
               >
                 {saving ? (
-                  <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Saving Index...</>
+                  <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Saving to Database...</>
                 ) : (
                   "Confirm & Add to Inventory"
                 )}

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/utils/supabase/client"
-import { MOCK_ACTIVE_DONATIONS, FoodItem, FoodCategory } from "@/lib/mock-data"
+import { FoodItem, FoodCategory } from "@/lib/mock-data"
 import { calculateTimeRemaining, calculateCO2Saved, generateTaxReceipt } from "@/lib/engine"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, Leaf, Recycle, Clock, Package, Tag, Scale, CalendarClock, Sparkles, ArrowRight } from "lucide-react"
+import { TrendingUp, Leaf, Recycle, Clock, Package, Tag, Scale, CalendarClock, Sparkles, ArrowRight, AlertCircle } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { SmartScanner } from "@/components/SmartScanner"
 
@@ -30,49 +30,50 @@ export default function BusinessDashboard() {
   const [activeDonations, setActiveDonations] = useState<FoodItem[]>([])
   const [totalSavedKg, setTotalSavedKg] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-          throw new Error("User not authenticated")
-        }
-
-        const { data: items, error } = await supabase
-          .from('food_items')
-          .select('*')
-          .eq('donor_id', user.id)
-          .order('created_at', { ascending: false })
-          
-        if (error) throw error
-
-        if (items && items.length > 0) {
-          const formattedItems: FoodItem[] = items.map(item => ({
-            id: item.id,
-            donorId: item.donor_id,
-            donorName: "Your Business",
-            itemName: item.item_name,
-            category: item.category as FoodCategory,
-            quantityKg: item.quantity_kg,
-            safeToConsumeUntil: item.safe_to_consume_until,
-            status: item.status as any,
-          }))
-          setActiveDonations(formattedItems)
-          const total = formattedItems.reduce((acc, curr) => acc + Number(curr.quantityKg), 0)
-          setTotalSavedKg(total)
-        } else {
-          setActiveDonations([])
-          setTotalSavedKg(0)
-        }
-      } catch (err) {
-        console.error("Error fetching data, falling back to mock:", err)
-        setActiveDonations(MOCK_ACTIVE_DONATIONS)
-        setTotalSavedKg(1250)
-      } finally {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setFetchError("You must be logged in to view your dashboard.")
         setLoading(false)
+        return
       }
+
+      const { data: items, error } = await supabase
+        .from('food_items')
+        .select('*')
+        .eq('donor_id', user.id)
+        .order('created_at', { ascending: false })
+        
+      if (error) {
+        console.error("Error fetching donations:", error)
+        setFetchError("Failed to load your donations. Please try refreshing.")
+        setLoading(false)
+        return
+      }
+
+      if (items && items.length > 0) {
+        const formattedItems: FoodItem[] = items.map(item => ({
+          id: item.id,
+          donorId: item.donor_id,
+          donorName: "Your Business",
+          itemName: item.item_name,
+          category: item.category as FoodCategory,
+          quantityKg: item.quantity_kg,
+          safeToConsumeUntil: item.safe_to_consume_until,
+          status: item.status as any,
+        }))
+        setActiveDonations(formattedItems)
+        const total = formattedItems.reduce((acc, curr) => acc + Number(curr.quantityKg), 0)
+        setTotalSavedKg(total)
+      } else {
+        setActiveDonations([])
+        setTotalSavedKg(0)
+      }
+      setLoading(false)
     }
 
     fetchData()
@@ -83,57 +84,44 @@ export default function BusinessDashboard() {
     const formData = new FormData(e.currentTarget)
     const qty = Number(formData.get("quantity"))
     
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not logged in")
-
-      const newItemData = {
-        donor_id: user.id,
-        item_name: formData.get("itemName") as string,
-        category: formData.get("category") as string,
-        quantity_kg: qty,
-        safe_to_consume_until: new Date(formData.get("consumeUntil") as string).toISOString(),
-        status: "Available",
-      }
-
-      let { data, error } = await supabase.from('food_items').insert([newItemData]).select().single()
-      
-      // Auto-fix for legacy users who don't have a profile yet
-      if (error && error.code === '23503') {
-        // Insert a missing profile and retry
-        await supabase.from('profiles').insert([{
-           id: user.id,
-           role: 'business',
-           name: user.email?.split('@')[0] || 'Legacy User',
-           organization_name: 'My Business'
-        }]);
-        
-        const retry = await supabase.from('food_items').insert([newItemData]).select().single()
-        data = retry.data;
-        error = retry.error;
-      }
-      
-      if (error) throw error
-      
-      if (data) {
-        const formattedNewItem: FoodItem = {
-          id: data.id,
-          donorId: data.donor_id,
-          donorName: "Your Business",
-          itemName: data.item_name,
-          category: data.category as FoodCategory,
-          quantityKg: data.quantity_kg,
-          safeToConsumeUntil: data.safe_to_consume_until,
-          status: data.status as any,
-        }
-        setActiveDonations([formattedNewItem, ...activeDonations])
-        setTotalSavedKg(totalSavedKg + qty)
-      }
-      e.currentTarget.reset()
-    } catch(err) {
-      console.error("Error inserting donation:", err)
-      alert("Failed to log donation. Please check if the database tables exist.")
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      alert("You must be logged in to list a donation.")
+      return
     }
+
+    const newItemData = {
+      donor_id: user.id,
+      item_name: formData.get("itemName") as string,
+      category: formData.get("category") as string,
+      quantity_kg: qty,
+      safe_to_consume_until: new Date(formData.get("consumeUntil") as string).toISOString(),
+      status: "Available",
+    }
+
+    const { data, error } = await supabase.from('food_items').insert([newItemData]).select().single()
+    
+    if (error) {
+      console.error("Error inserting donation:", error)
+      alert("Failed to log donation: " + error.message)
+      return
+    }
+    
+    if (data) {
+      const formattedNewItem: FoodItem = {
+        id: data.id,
+        donorId: data.donor_id,
+        donorName: "Your Business",
+        itemName: data.item_name,
+        category: data.category as FoodCategory,
+        quantityKg: data.quantity_kg,
+        safeToConsumeUntil: data.safe_to_consume_until,
+        status: data.status as any,
+      }
+      setActiveDonations([formattedNewItem, ...activeDonations])
+      setTotalSavedKg(totalSavedKg + qty)
+    }
+    e.currentTarget.reset()
   }
 
   const getBadgeColor = (statusColor: string) => {
@@ -155,6 +143,12 @@ export default function BusinessDashboard() {
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
+          {fetchError && (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
+              <AlertCircle className="h-4 w-4 shrink-0" /> {fetchError}
+            </div>
+          )}
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card className="hover-card bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200 dark:border-white/5 border-b-2 border-b-emerald-500/50 shadow-inner">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -251,7 +245,7 @@ export default function BusinessDashboard() {
                     </div>
                   )
                 })}
-                {activeDonations.length === 0 && (
+                {activeDonations.length === 0 && !fetchError && (
                  <div className="text-center text-slate-500 py-6">
                    No active donations. Start logging your surplus!
                  </div>

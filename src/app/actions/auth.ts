@@ -6,6 +6,8 @@ export async function registerOrganization(formData: any) {
   const supabase = await createClient()
 
   // 1. Sign up the user in Supabase Auth
+  // The DB trigger `on_auth_user_created` will auto-create the profiles row
+  // using raw_user_meta_data fields.
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
@@ -16,7 +18,7 @@ export async function registerOrganization(formData: any) {
         phone: formData.phone,
         language: formData.language,
         vehicle: formData.vehicle,
-        role: formData.goal, // 'donor' or 'ngo'
+        role: formData.goal, // 'donor' or 'ngo' — the trigger maps 'ngo' → 'ngo', else → 'business'
       }
     }
   })
@@ -29,22 +31,8 @@ export async function registerOrganization(formData: any) {
     return { success: false, error: "Failed to create user account." }
   }
 
-  // 2. Insert into profiles FIRST (it's the foreign key target for food_items, claims, etc.)
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert({
-      id: authData.user.id,
-      role: formData.goal === "ngo" ? "ngo" : "business",
-      name: `${formData.firstName} ${formData.lastName}`,
-      organization_name: formData.orgName
-    })
-
-  if (profileError) {
-    console.error("Profile insert error:", profileError)
-    return { success: false, error: profileError.message || "Account created, but failed to save profile." }
-  }
-
-  // 3. Insert organization details into the 'organizations' table
+  // 2. Insert organization details into the 'organizations' table
+  // Profile row is already created by the auth trigger at this point.
   const { error: orgError } = await supabase
     .from('organizations')
     .insert({
@@ -63,7 +51,7 @@ export async function registerOrganization(formData: any) {
 
   if (orgError) {
     console.error("Organization insert error:", orgError)
-    // Non-fatal: profile was created, org details are supplementary
+    // Non-fatal: profile was created by trigger, org details are supplementary
   }
 
   return { success: true }
