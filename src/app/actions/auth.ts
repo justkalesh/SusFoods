@@ -6,19 +6,17 @@ import { cookies } from 'next/headers'
 /**
  * Generates a unique trust number for an organization.
  * Format: SUS-{BIZ|NGO}-{YEAR}-{5-DIGIT-RANDOM}
- * This serves as a joinable code for teams in future.
  */
 function generateTrustNumber(role: string): string {
   const prefix = role === 'ngo' ? 'NGO' : 'BIZ'
   const year = new Date().getFullYear()
-  const random = Math.floor(10000 + Math.random() * 90000) // 5-digit
+  const random = Math.floor(10000 + Math.random() * 90000)
   return `SUS-${prefix}-${year}-${random}`
 }
 
 export async function registerOrganization(formData: any) {
   const cookieStore = await cookies()
 
-  // Create a fresh Supabase server client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -40,7 +38,14 @@ export async function registerOrganization(formData: any) {
     }
   )
 
-  // 1. Sign up the user in Supabase Auth
+  // Generate trust number upfront
+  const trustNumber = generateTrustNumber(formData.goal)
+  const personalPhone = formData.phone ? `${formData.countryCode} ${formData.phone}` : ''
+  const orgPhone = formData.orgPhone ? `${formData.orgCountryCode} ${formData.orgPhone}` : ''
+
+  // 1. Sign up the user — store ALL org data in user_metadata
+  //    so even if the org insert fails (RLS / no session), 
+  //    we can self-heal on first authenticated load.
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
@@ -48,11 +53,22 @@ export async function registerOrganization(formData: any) {
       data: {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        phone: `${formData.countryCode} ${formData.phone}`,
+        phone: personalPhone,
         language: formData.language,
         vehicle: formData.vehicle,
         role: formData.goal,
         organization_name: formData.orgName,
+        // Store org details in metadata for self-healing
+        org_name: formData.orgName || '',
+        org_legal_name: trustNumber,
+        org_email: formData.orgEmail || '',
+        org_phone: orgPhone,
+        org_address: formData.orgAddress || '',
+        org_latitude: formData.latitude || '',
+        org_longitude: formData.longitude || '',
+        org_country: formData.country || 'India',
+        org_suite_number: formData.suiteNumber || '',
+        org_type: formData.orgType || '',
       }
     }
   })
@@ -65,41 +81,33 @@ export async function registerOrganization(formData: any) {
     return { success: false, error: "Failed to create user account." }
   }
 
-  // 2. If we got a session back, set it so RLS recognizes the user
+  // 2. Try to set session (only works if email confirmation is disabled)
   if (authData.session) {
     await supabase.auth.setSession({
       access_token: authData.session.access_token,
       refresh_token: authData.session.refresh_token,
     })
-  }
 
-  // 3. Generate a unique trust number for this organization
-  const trustNumber = generateTrustNumber(formData.goal)
+    // 3. Attempt org insert (may fail if RLS blocks or email confirmation is on)
+    const { error: orgError } = await supabase
+      .from('organizations')
+      .insert({
+        user_id: authData.user.id,
+        name: formData.orgName || null,
+        legal_name: trustNumber,
+        email: formData.orgEmail || null,
+        phone: orgPhone || null,
+        address: formData.orgAddress || null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        country: formData.country || null,
+        suite_number: formData.suiteNumber || null,
+        type: formData.orgType || null,
+      })
 
-  // 4. Insert organization details
-  const orgPayload = {
-    user_id: authData.user.id,
-    name: formData.orgName || null,
-    legal_name: trustNumber,
-    email: formData.orgEmail || null,
-    phone: formData.orgPhone ? `${formData.orgCountryCode} ${formData.orgPhone}` : null,
-    address: formData.orgAddress || null,
-    latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-    longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-    country: formData.country || null,
-    suite_number: formData.suiteNumber || null,
-    type: formData.orgType || null,
-  }
-
-  const { error: orgError } = await supabase
-    .from('organizations')
-    .insert(orgPayload)
-
-  if (orgError) {
-    console.error("Organization insert error:", orgError.message, orgError.code, orgError.details)
-    // Return success anyway — the auth account was created.
-    // The user can update their org info later from the profile page.
-    return { success: true, warning: "Account created but organization details could not be saved. You can update them on your profile page." }
+    if (orgError) {
+      console.error("Org insert error (will self-heal on first login):", orgError.message)
+    }
   }
 
   return { success: true }

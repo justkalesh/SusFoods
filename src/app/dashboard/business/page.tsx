@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, Leaf, Recycle, Clock, Package, Tag, Scale, CalendarClock, Sparkles, ArrowRight, AlertCircle } from "lucide-react"
+import { TrendingUp, Leaf, Recycle, Clock, Package, Tag, Scale, CalendarClock, Sparkles, ArrowRight, AlertCircle, Truck, CheckCircle2 } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { SmartScanner } from "@/components/SmartScanner"
 
@@ -31,6 +31,8 @@ export default function BusinessDashboard() {
   const [totalSavedKg, setTotalSavedKg] = useState(0)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [quantityUnit, setQuantityUnit] = useState<'kg' | 'portions'>('kg')
+  const [claims, setClaims] = useState<any[]>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -72,6 +74,32 @@ export default function BusinessDashboard() {
       } else {
         setActiveDonations([])
         setTotalSavedKg(0)
+      }
+
+      // Fetch claims for this donor's food items
+      const foodIds = (items || []).map((i: any) => i.id)
+      if (foodIds.length > 0) {
+        const { data: claimsData } = await supabase
+          .from('claims')
+          .select('*, food_items!inner(item_name, quantity_kg, donor_id)')
+          .in('food_item_id', foodIds)
+          .order('claimed_at', { ascending: false })
+
+        if (claimsData) {
+          // Get NGO names
+          const ngoIds = [...new Set(claimsData.map((c: any) => c.ngo_id))]
+          if (ngoIds.length > 0) {
+            const { data: orgs } = await supabase
+              .from('organizations')
+              .select('user_id, name')
+              .in('user_id', ngoIds)
+            const ngoNames: Record<string, string> = {}
+            if (orgs) orgs.forEach((o: any) => { ngoNames[o.user_id] = o.name })
+            setClaims(claimsData.map((c: any) => ({ ...c, ngo_name: ngoNames[c.ngo_id] || 'NGO' })))
+          } else {
+            setClaims(claimsData)
+          }
+        }
       }
       setLoading(false)
     }
@@ -123,6 +151,19 @@ export default function BusinessDashboard() {
       setTotalSavedKg(totalSavedKg + qty)
     }
     form.reset()
+    setQuantityUnit('kg')
+  }
+
+  const updateClaimStatus = async (claimId: string, foodItemId: string, newStatus: string) => {
+    const { error } = await supabase.from('claims').update({ status: newStatus }).eq('id', claimId)
+    if (!error) {
+      setClaims(prev => prev.map(c => c.id === claimId ? { ...c, status: newStatus } : c))
+      if (newStatus === 'In Transit' || newStatus === 'Received') {
+        const foodStatus = newStatus === 'Received' ? 'Delivered' : 'In Transit'
+        await supabase.from('food_items').update({ status: foodStatus }).eq('id', foodItemId)
+        setActiveDonations(prev => prev.map(d => d.id === foodItemId ? { ...d, status: foodStatus as any } : d))
+      }
+    }
   }
 
   const getBadgeColor = (statusColor: string) => {
@@ -141,6 +182,7 @@ export default function BusinessDashboard() {
           <TabsTrigger value="overview" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Your Community Impact</TabsTrigger>
           <TabsTrigger value="smart-scan" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Auto-Scan Invoice</TabsTrigger>
           <TabsTrigger value="inventory" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Manual Entry</TabsTrigger>
+          <TabsTrigger value="journey" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Meal Journey</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -318,7 +360,7 @@ export default function BusinessDashboard() {
                       <Label htmlFor="quantity" className="text-slate-700 font-medium text-sm flex items-center gap-1.5">
                         <Scale className="h-3.5 w-3.5 text-emerald-600" /> Quantity
                       </Label>
-                      <div className="relative">
+                      <div className="flex gap-2">
                         <Input 
                           id="quantity" 
                           name="quantity" 
@@ -326,9 +368,12 @@ export default function BusinessDashboard() {
                           min="1" 
                           placeholder="10" 
                           required 
-                          className="h-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all pr-20" 
+                          className="h-11 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all flex-1" 
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">kg / portions</span>
+                        <div className="flex rounded-lg border border-slate-200 overflow-hidden shrink-0">
+                          <button type="button" onClick={() => setQuantityUnit('kg')} className={`px-3 h-11 text-sm font-medium transition-all ${quantityUnit === 'kg' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>kg</button>
+                          <button type="button" onClick={() => setQuantityUnit('portions')} className={`px-3 h-11 text-sm font-medium transition-all ${quantityUnit === 'portions' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>portions</button>
+                        </div>
                       </div>
                     </div>
 
@@ -401,6 +446,76 @@ export default function BusinessDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Meal Journey Tracker */}
+        <TabsContent value="journey" className="space-y-4">
+          <Card className="bg-white border-slate-200 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                  <Truck className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-slate-800 font-heading text-lg">Meal Journey Tracker</CardTitle>
+                  <CardDescription className="text-slate-500 text-sm">Track and update the status of claimed donations.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {claims.length === 0 ? (
+                <div className="text-center text-slate-500 py-10">No claims yet. Once an NGO claims your food, it will appear here.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left py-3 px-4 text-slate-600 font-medium">Food Item</th>
+                        <th className="text-left py-3 px-4 text-slate-600 font-medium">Claimed By</th>
+                        <th className="text-left py-3 px-4 text-slate-600 font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-slate-600 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {claims.map((claim: any) => (
+                        <tr key={claim.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 text-slate-800 font-medium">{claim.food_items?.item_name || 'N/A'}</td>
+                          <td className="py-3 px-4 text-slate-600">{claim.ngo_name || 'NGO'}</td>
+                          <td className="py-3 px-4">
+                            <Badge variant="outline" className={`text-xs ${
+                              claim.status === 'Received' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              claim.status === 'In Transit' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {claim.status === 'Received' && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                              {claim.status === 'In Transit' && <Truck className="w-3 h-3 mr-1" />}
+                              {claim.status === 'Pending' && <Clock className="w-3 h-3 mr-1" />}
+                              {claim.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            {claim.status === 'Pending' && (
+                              <Button size="sm" variant="outline" className="h-8 text-xs border-amber-200 text-amber-700 hover:bg-amber-50" onClick={() => updateClaimStatus(claim.id, claim.food_item_id, 'In Transit')}>
+                                <Truck className="w-3 h-3 mr-1" /> Mark In Transit
+                              </Button>
+                            )}
+                            {claim.status === 'In Transit' && (
+                              <Button size="sm" variant="outline" className="h-8 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => updateClaimStatus(claim.id, claim.food_item_id, 'Received')}>
+                                <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Received
+                              </Button>
+                            )}
+                            {claim.status === 'Received' && (
+                              <span className="text-xs text-emerald-600 font-medium">✓ Completed</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

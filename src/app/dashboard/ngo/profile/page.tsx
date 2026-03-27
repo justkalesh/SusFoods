@@ -43,7 +43,7 @@ export default function NGOProfilePage() {
         .from("profiles")
         .select("role")
         .eq("id", user.id)
-        .single()
+        .maybeSingle()
 
       setRole(profile?.role || "ngo")
 
@@ -53,7 +53,30 @@ export default function NGOProfilePage() {
         .eq("user_id", user.id)
         .maybeSingle()
 
-      if (org) setOrgInfo(org)
+      if (org) {
+        setOrgInfo(org)
+      } else {
+        const meta = user.user_metadata || {}
+        const orgFromMeta = {
+          user_id: user.id,
+          name: meta.org_name || meta.organization_name || null,
+          legal_name: meta.org_legal_name || null,
+          email: meta.org_email || user.email || null,
+          phone: meta.org_phone || meta.phone || null,
+          address: meta.org_address || null,
+          latitude: meta.org_latitude ? parseFloat(meta.org_latitude) : null,
+          longitude: meta.org_longitude ? parseFloat(meta.org_longitude) : null,
+          country: meta.org_country || null,
+          suite_number: meta.org_suite_number || null,
+          type: meta.org_type || null,
+        }
+        const { data: newOrg } = await supabase
+          .from("organizations")
+          .insert(orgFromMeta)
+          .select("*")
+          .single()
+        if (newOrg) setOrgInfo(newOrg)
+      }
       setLoading(false)
     }
     loadUser()
