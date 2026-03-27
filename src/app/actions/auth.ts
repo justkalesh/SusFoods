@@ -1,13 +1,34 @@
 "use server"
 
-import { createClient } from "@/utils/supabase/server"
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function registerOrganization(formData: any) {
-  const supabase = await createClient()
+  const cookieStore = await cookies()
+
+  // Create a fresh Supabase server client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // Called from Server Component context — safe to ignore
+          }
+        },
+      },
+    }
+  )
 
   // 1. Sign up the user in Supabase Auth
-  // The DB trigger `on_auth_user_created` will auto-create the profiles row
-  // using raw_user_meta_data fields.
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
@@ -18,7 +39,8 @@ export async function registerOrganization(formData: any) {
         phone: formData.phone,
         language: formData.language,
         vehicle: formData.vehicle,
-        role: formData.goal, // 'donor' or 'ngo' — the trigger maps 'ngo' → 'ngo', else → 'business'
+        role: formData.goal,
+        organization_name: formData.orgName,
       }
     }
   })
@@ -31,27 +53,38 @@ export async function registerOrganization(formData: any) {
     return { success: false, error: "Failed to create user account." }
   }
 
-  // 2. Insert organization details into the 'organizations' table
-  // Profile row is already created by the auth trigger at this point.
+  // 2. If we got a session back, set it so RLS recognizes the user
+  if (authData.session) {
+    await supabase.auth.setSession({
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token,
+    })
+  }
+
+  // 3. Insert organization details
+  const orgPayload = {
+    user_id: authData.user.id,
+    name: formData.orgName || null,
+    legal_name: formData.orgLegalName || null,
+    email: formData.orgEmail || null,
+    phone: formData.orgPhone || null,
+    address: formData.orgAddress || null,
+    latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+    longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+    country: formData.country || null,
+    suite_number: formData.suiteNumber || null,
+    type: formData.orgType || null,
+  }
+
   const { error: orgError } = await supabase
     .from('organizations')
-    .insert({
-      user_id: authData.user.id,
-      name: formData.orgName,
-      legal_name: formData.orgLegalName,
-      email: formData.orgEmail,
-      phone: formData.orgPhone,
-      address: formData.orgAddress,
-      latitude: parseFloat(formData.latitude),
-      longitude: parseFloat(formData.longitude),
-      country: formData.country,
-      suite_number: formData.suiteNumber,
-      type: formData.orgType,
-    })
+    .insert(orgPayload)
 
   if (orgError) {
-    console.error("Organization insert error:", orgError)
-    // Non-fatal: profile was created by trigger, org details are supplementary
+    console.error("Organization insert error:", orgError.message, orgError.code, orgError.details)
+    // Return success anyway — the auth account was created.
+    // The user can update their org info later from the profile page.
+    return { success: true, warning: "Account created but organization details could not be saved. You can update them on your profile page." }
   }
 
   return { success: true }
