@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, Fragment } from "react"
 import {
   Package, ChevronDown, ChevronRight, MapPin, AlertTriangle,
   ShieldAlert, Leaf, MoreHorizontal, Pencil, Trash2, Heart,
@@ -419,7 +419,7 @@ export function DonorInventoryManager() {
                 )}
 
                 {batchGroups.map(group => (
-                  <>
+                  <Fragment key={group.itemName}>
                     {/* ── Group Header Row ── */}
                     <tr
                       key={group.itemName}
@@ -505,7 +505,7 @@ export function DonorInventoryManager() {
                         </tr>
                       )
                     })}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
