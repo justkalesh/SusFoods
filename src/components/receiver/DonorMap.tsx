@@ -57,45 +57,44 @@ function DonorMapInner() {
         return
       }
 
-      // 3. Fetch specific profiles where lat/lng exist
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, organization_name, latitude, longitude')
-        .in('id', donorIds)
+      // 3. Fetch organizations for these donors where coordinates live
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('user_id, name, latitude, longitude')
+        .in('user_id', donorIds)
 
-      if (profileError) {
-        console.error("Error fetching profile coordinates:", profileError)
+      if (orgError) {
+        console.error("Error fetching organization coordinates:", orgError)
         setLoading(false)
-        // Fallback to plotting without map coordinates... wait we can't do that safely on leaflet.
         return
       }
 
-      // 4. Build a lookup map: id → profile info
-      const profileMap = new Map<string, { name: string; lat: number; lng: number }>()
-      if (profileData) {
-        for (const profile of profileData) {
-          if (profile.latitude && profile.longitude) {
-            profileMap.set(profile.id, {
-              name: profile.organization_name || "Local Donor",
-              lat: Number(profile.latitude),
-              lng: Number(profile.longitude),
+      // 4. Build a lookup map: user_id → org info
+      const orgMap = new Map<string, { name: string; lat: number; lng: number }>()
+      if (orgData) {
+        for (const org of orgData) {
+          if (org.latitude && org.longitude) {
+            orgMap.set(org.user_id, {
+              name: org.name || "Local Donor",
+              lat: Number(org.latitude),
+              lng: Number(org.longitude),
             })
           }
         }
       }
 
-      // 5. Merge food items with profile coordinates
+      // 5. Merge food items with organization coordinates
       const pins: DonorPin[] = foodData
-        .filter(item => profileMap.has(item.donor_id))
+        .filter(item => orgMap.has(item.donor_id))
         .map(item => {
-          const profile = profileMap.get(item.donor_id)!
+          const org = orgMap.get(item.donor_id)!
           return {
             id: item.id,
-            businessName: profile.name,
+            businessName: org.name,
             foodType: item.item_name,
             quantity: `${item.quantity_kg} kg`,
-            lat: profile.lat,
-            lng: profile.lng,
+            lat: org.lat,
+            lng: org.lng,
           }
         })
         
