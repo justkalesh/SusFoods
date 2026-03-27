@@ -65,29 +65,28 @@ function DonorMapInner() {
 
       if (orgError) {
         console.error("Error fetching organization coordinates:", orgError)
-        setLoading(false)
-        return
+        // Don't block — just show empty map
       }
 
-      // 4. Build a lookup map: user_id → org info
-      const orgMap = new Map<string, { name: string; lat: number; lng: number }>()
+      // 4. Build a lookup: user_id → org info
+      const orgLookup: Record<string, { name: string; lat: number; lng: number }> = {}
       if (orgData) {
         for (const org of orgData) {
           if (org.latitude && org.longitude) {
-            orgMap.set(org.user_id, {
+            orgLookup[org.user_id] = {
               name: org.name || "Local Donor",
               lat: Number(org.latitude),
               lng: Number(org.longitude),
-            })
+            }
           }
         }
       }
 
       // 5. Merge food items with organization coordinates
       const pins: DonorPin[] = foodData
-        .filter(item => orgMap.has(item.donor_id))
+        .filter(item => orgLookup[item.donor_id])
         .map(item => {
-          const org = orgMap.get(item.donor_id)!
+          const org = orgLookup[item.donor_id]
           return {
             id: item.id,
             businessName: org.name,

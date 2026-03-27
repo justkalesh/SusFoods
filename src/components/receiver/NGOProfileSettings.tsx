@@ -47,7 +47,7 @@ export function NGOProfileSettings() {
         .from("organizations")
         .select("name, legal_name, phone, address")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
       setProfile({
         organizationName: org?.name || "",

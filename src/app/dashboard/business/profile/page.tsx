@@ -51,7 +51,7 @@ export default function DonorProfilePage() {
         .from("organizations")
         .select("*")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
       if (org) setOrgInfo(org)
       setLoading(false)
@@ -68,9 +68,9 @@ export default function DonorProfilePage() {
   }
 
   const detailRows = orgInfo ? [
+    { icon: FileText, label: "Trust Number", value: orgInfo.legal_name },
     { icon: Mail, label: "Registered Email", value: orgInfo.email },
     { icon: Phone, label: "Phone", value: orgInfo.phone },
-    { icon: Building2, label: "Legal Name", value: orgInfo.legal_name },
     { icon: FileText, label: "Organization Type", value: orgInfo.type },
     { icon: MapPin, label: "Address", value: orgInfo.address },
     { icon: Globe, label: "Country", value: orgInfo.country },

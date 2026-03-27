@@ -52,7 +52,7 @@ export function DonorProfileSettings() {
         .from("organizations")
         .select("name, type, phone, address")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
       setProfile({
         businessName: org?.name || "",

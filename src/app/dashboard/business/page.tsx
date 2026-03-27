@@ -81,7 +81,8 @@ export default function BusinessDashboard() {
 
   const handleLogInventory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
     const qty = Number(formData.get("quantity"))
     
     const { data: { user } } = await supabase.auth.getUser()
@@ -121,7 +122,7 @@ export default function BusinessDashboard() {
       setActiveDonations([formattedNewItem, ...activeDonations])
       setTotalSavedKg(totalSavedKg + qty)
     }
-    e.currentTarget.reset()
+    form.reset()
   }
 
   const getBadgeColor = (statusColor: string) => {

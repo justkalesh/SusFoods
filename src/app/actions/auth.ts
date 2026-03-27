@@ -48,7 +48,7 @@ export async function registerOrganization(formData: any) {
       data: {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        phone: formData.phone,
+        phone: `${formData.countryCode} ${formData.phone}`,
         language: formData.language,
         vehicle: formData.vehicle,
         role: formData.goal,
@@ -82,7 +82,7 @@ export async function registerOrganization(formData: any) {
     name: formData.orgName || null,
     legal_name: trustNumber,
     email: formData.orgEmail || null,
-    phone: formData.orgPhone || null,
+    phone: formData.orgPhone ? `${formData.orgCountryCode} ${formData.orgPhone}` : null,
     address: formData.orgAddress || null,
     latitude: formData.latitude ? parseFloat(formData.latitude) : null,
     longitude: formData.longitude ? parseFloat(formData.longitude) : null,

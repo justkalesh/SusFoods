@@ -45,6 +45,7 @@ export default function RegisterPage() {
     compostable: null as boolean | null,
     firstName: "",
     lastName: "",
+    countryCode: "+91",
     phone: "",
     password: "",
     termsAgreed: false,
@@ -53,12 +54,22 @@ export default function RegisterPage() {
     country: "India",
     orgLegalName: "",
     orgEmail: "",
+    orgCountryCode: "+91",
     orgPhone: "",
     orgAddress: "",
     latitude: "",
     longitude: "",
     suiteNumber: ""
   })
+
+  const countryCodes = [
+    { code: "+91", flag: "🇮🇳", name: "India" },
+    { code: "+92", flag: "🇵🇰", name: "Pakistan" },
+    { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
+    { code: "+977", flag: "🇳🇵", name: "Nepal" },
+    { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
+    { code: "+975", flag: "🇧🇹", name: "Bhutan" },
+  ]
 
   const updateForm = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -402,15 +413,29 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-slate-700 font-medium">Mobile Phone (India)</Label>
-                      <Input 
-                        id="phone" 
-                        type="tel"
-                        className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900" 
-                        placeholder="+91 81234 56789"
-                        value={formData.phone}
-                        onChange={(e) => updateForm("phone", e.target.value)}
-                      />
+                      <Label htmlFor="phone" className="text-slate-700 font-medium">Mobile Phone</Label>
+                      <div className="flex gap-2">
+                        <Select value={formData.countryCode} onValueChange={(val) => updateForm("countryCode", val)}>
+                          <SelectTrigger className="h-12 w-[120px] bg-white border-slate-200 text-slate-900 shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countryCodes.map(c => (
+                              <SelectItem key={c.code} value={c.code}>
+                                <span className="flex items-center gap-1.5">{c.flag} {c.code}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input 
+                          id="phone" 
+                          type="tel"
+                          className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900 flex-1" 
+                          placeholder="81234 56789"
+                          value={formData.phone}
+                          onChange={(e) => updateForm("phone", e.target.value)}
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -542,13 +567,28 @@ export default function RegisterPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="orgPhone" className="text-slate-700 font-medium">Organization Phone Number</Label>
-                      <Input 
-                        id="orgPhone" 
-                        type="tel"
-                        className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900" 
-                        value={formData.orgPhone}
-                        onChange={(e) => updateForm("orgPhone", e.target.value)}
-                      />
+                      <div className="flex gap-2">
+                        <Select value={formData.orgCountryCode} onValueChange={(val) => updateForm("orgCountryCode", val)}>
+                          <SelectTrigger className="h-12 w-[120px] bg-white border-slate-200 text-slate-900 shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countryCodes.map(c => (
+                              <SelectItem key={c.code} value={c.code}>
+                                <span className="flex items-center gap-1.5">{c.flag} {c.code}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input 
+                          id="orgPhone" 
+                          type="tel"
+                          className="h-12 bg-white border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 text-slate-900 flex-1" 
+                          placeholder="98765 43210"
+                          value={formData.orgPhone}
+                          onChange={(e) => updateForm("orgPhone", e.target.value)}
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
