@@ -36,40 +36,69 @@ function DonorMapInner() {
 
   useEffect(() => {
     async function fetchDonors() {
-      // Fetch available food items joined with donor profiles for location + name
-      const { data, error } = await supabase
+      // 1. Fetch available food items
+      const { data: foodData, error: foodError } = await supabase
         .from('food_items')
-        .select(`
-          id, item_name, quantity_kg, donor_id, 
-          profiles:donor_id(organization_name, latitude, longitude)
-        `)
+        .select('id, item_name, category, quantity_kg, donor_id')
         .eq('status', 'Available')
+        .order('created_at', { ascending: false })
 
-      if (error || !data) {
-        console.error("Error fetching map donors:", error)
+      if (foodError || !foodData) {
+        console.error("Error fetching food items for map:", foodError)
         setLoading(false)
         return
       }
 
-      const pins: DonorPin[] = []
-      
-      data.forEach((item: any) => {
-        // Since it's a 1-to-1 join, profiles might be a single object or Array depending on FK constraints.
-        // Usually it's an object if foreign key is unique, otherwise array. We handle both:
-        const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
-        
-        if (profile?.latitude && profile?.longitude) {
-          pins.push({
+      // 2. Get unique donor IDs
+      const donorIds = [...new Set(foodData.map(f => f.donor_id))]
+      if (donorIds.length === 0) {
+        setDonors([])
+        setLoading(false)
+        return
+      }
+
+      // 3. Fetch specific profiles where lat/lng exist
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, organization_name, latitude, longitude')
+        .in('id', donorIds)
+
+      if (profileError) {
+        console.error("Error fetching profile coordinates:", profileError)
+        setLoading(false)
+        // Fallback to plotting without map coordinates... wait we can't do that safely on leaflet.
+        return
+      }
+
+      // 4. Build a lookup map: id → profile info
+      const profileMap = new Map<string, { name: string; lat: number; lng: number }>()
+      if (profileData) {
+        for (const profile of profileData) {
+          if (profile.latitude && profile.longitude) {
+            profileMap.set(profile.id, {
+              name: profile.organization_name || "Local Donor",
+              lat: Number(profile.latitude),
+              lng: Number(profile.longitude),
+            })
+          }
+        }
+      }
+
+      // 5. Merge food items with profile coordinates
+      const pins: DonorPin[] = foodData
+        .filter(item => profileMap.has(item.donor_id))
+        .map(item => {
+          const profile = profileMap.get(item.donor_id)!
+          return {
             id: item.id,
-            businessName: profile.organization_name || "Local Donor",
+            businessName: profile.name,
             foodType: item.item_name,
             quantity: `${item.quantity_kg} kg`,
-            lat: Number(profile.latitude),
-            lng: Number(profile.longitude),
-          })
-        }
-      })
-
+            lat: profile.lat,
+            lng: profile.lng,
+          }
+        })
+        
       setDonors(pins)
       setLoading(false)
     }
