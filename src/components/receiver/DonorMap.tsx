@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
+import { useState, useEffect, useRef } from "react"
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { createClient } from "@/utils/supabase/client"
@@ -14,9 +14,10 @@ interface DonorPin {
   quantity: string
   lat: number
   lng: number
+  hasActiveFood: boolean
 }
 
-// ── Custom Marker Icon ──────────────────────────────────────
+// ── Custom Marker Icons ─────────────────────────────────────
 const donorIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -27,80 +28,130 @@ const donorIcon = new L.Icon({
   shadowSize: [41, 41],
 })
 
+// Greyed out marker for donors without active food
+const inactiveDonorIcon = new L.DivIcon({
+  html: `<div style="background: linear-gradient(135deg, #94a3b8, #64748b); width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;"><span style="font-size:12px;">🏢</span></div>`,
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -16],
+})
+
+// Purple marker for NGO's own location
+const ngoIcon = new L.DivIcon({
+  html: `<div style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><span style="font-size: 16px;">📍</span></div>`,
+  className: "",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -20],
+})
+
+// ── Fly-to helper component ─────────────────────────────────
+function FlyToCenter({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap()
+  useEffect(() => {
+    map.flyTo(center, zoom, { duration: 1.2 })
+  }, [center, zoom, map])
+  return null
+}
+
 // ── Map Component (client-only) ─────────────────────────────
 function DonorMapInner() {
   const [donors, setDonors] = useState<DonorPin[]>([])
   const [loading, setLoading] = useState(true)
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set())
+  const [ngoCenter, setNgoCenter] = useState<[number, number] | null>(null)
+  const [ngoName, setNgoName] = useState("Your Location")
+  const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null)
   const supabase = createClient()
 
+  // Default center: India overview
+  const defaultCenter: [number, number] = [20.5937, 78.9629]
+  const defaultZoom = 5
+
   useEffect(() => {
-    async function fetchDonors() {
-      // 1. Fetch available food items
-      const { data: foodData, error: foodError } = await supabase
-        .from('food_items')
-        .select('id, item_name, category, quantity_kg, donor_id')
-        .eq('status', 'Available')
-        .order('created_at', { ascending: false })
+    async function fetchMapData() {
+      const { data: { user } } = await supabase.auth.getUser()
 
-      if (foodError || !foodData) {
-        console.error("Error fetching food items for map:", foodError)
-        setLoading(false)
-        return
-      }
+      // 1. Get NGO's own coordinates from organizations table
+      if (user) {
+        const { data: ngoOrg } = await supabase
+          .from("organizations")
+          .select("name, latitude, longitude")
+          .eq("user_id", user.id)
+          .maybeSingle()
 
-      // 2. Get unique donor IDs
-      const donorIds = [...new Set(foodData.map(f => f.donor_id))]
-      if (donorIds.length === 0) {
-        setDonors([])
-        setLoading(false)
-        return
-      }
-
-      // 3. Fetch organizations for these donors where coordinates live
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .select('user_id, name, latitude, longitude')
-        .in('user_id', donorIds)
-
-      if (orgError) {
-        console.warn("Could not fetch organization coordinates (RLS may need SELECT policy on organizations table):", orgError?.message || orgError)
-      }
-
-      // 4. Build a lookup: user_id → org info
-      const orgLookup: Record<string, { name: string; lat: number; lng: number }> = {}
-      if (orgData) {
-        for (const org of orgData) {
-          if (org.latitude && org.longitude) {
-            orgLookup[org.user_id] = {
-              name: org.name || "Local Donor",
-              lat: Number(org.latitude),
-              lng: Number(org.longitude),
-            }
+        if (ngoOrg?.latitude && ngoOrg?.longitude) {
+          const lat = Number(ngoOrg.latitude)
+          const lng = Number(ngoOrg.longitude)
+          if (lat !== 0 && lng !== 0) {
+            setNgoCenter([lat, lng])
+            setNgoName(ngoOrg.name || "Your NGO")
           }
         }
       }
 
-      // 5. Merge food items with organization coordinates
-      const pins: DonorPin[] = foodData
-        .filter(item => orgLookup[item.donor_id])
-        .map(item => {
-          const org = orgLookup[item.donor_id]
-          return {
-            id: item.id,
-            businessName: org.name,
-            foodType: item.item_name,
-            quantity: `${item.quantity_kg} kg`,
-            lat: org.lat,
-            lng: org.lng,
+      // 2. Fetch ALL organizations with valid coordinates (every registered donor)
+      const { data: allOrgs, error: orgError } = await supabase
+        .from('organizations')
+        .select('user_id, name, latitude, longitude')
+
+      if (orgError) {
+        console.warn("[DonorMap] Org query error:", orgError.message)
+      }
+
+      // Build map of all orgs with valid coordinates
+      const orgList: { userId: string; name: string; lat: number; lng: number }[] = []
+      if (allOrgs) {
+        for (const org of allOrgs) {
+          const lat = Number(org.latitude)
+          const lng = Number(org.longitude)
+          if (lat && lng && lat !== 0 && lng !== 0) {
+            // Skip the current NGO user (they have their own pin)
+            if (user && org.user_id === user.id) continue
+            orgList.push({ userId: org.user_id, name: org.name || "Registered Donor", lat, lng })
           }
-        })
-        
+        }
+      }
+
+      // 3. Fetch available food items to overlay active donation info
+      const { data: foodData } = await supabase
+        .from('food_items')
+        .select('id, item_name, quantity_kg, donor_id')
+        .eq('status', 'Available')
+
+      // Group food items by donor
+      const foodByDonor: Record<string, { items: string[]; totalKg: number; firstItemId: string }> = {}
+      if (foodData) {
+        for (const item of foodData) {
+          if (!foodByDonor[item.donor_id]) {
+            foodByDonor[item.donor_id] = { items: [], totalKg: 0, firstItemId: item.id }
+          }
+          foodByDonor[item.donor_id].items.push(item.item_name)
+          foodByDonor[item.donor_id].totalKg += Number(item.quantity_kg)
+        }
+      }
+
+      // 4. Create pins for ALL organizations
+      const pins: DonorPin[] = orgList.map(org => {
+        const food = foodByDonor[org.userId]
+        return {
+          id: food?.firstItemId || org.userId,
+          businessName: org.name,
+          foodType: food ? food.items.slice(0, 3).join(", ") : "No active listings",
+          quantity: food ? `${food.totalKg} kg available` : "—",
+          lat: org.lat,
+          lng: org.lng,
+          hasActiveFood: !!food,
+        }
+      })
+
+      console.log("[DonorMap] Total org pins:", pins.length, "| With active food:", pins.filter(p => p.hasActiveFood).length)
       setDonors(pins)
       setLoading(false)
     }
 
-    fetchDonors()
+    fetchMapData()
   }, [])
 
   const handleClaim = async (donorId: string) => {
@@ -125,20 +176,49 @@ function DonorMapInner() {
     setClaimedIds(prev => new Set(prev).add(donorId))
   }
 
-  // Default center: LPU campus
-  const defaultCenter: [number, number] = [31.2553, 75.9592]
+  const handleRecenter = () => {
+    if (ngoCenter) {
+      setFlyTarget({ center: ngoCenter, zoom: 13 })
+      // Reset to trigger re-fly
+      setTimeout(() => setFlyTarget(null), 100)
+    }
+  }
+
+  const mapCenter = ngoCenter || defaultCenter
+  const mapZoom = ngoCenter ? 13 : defaultZoom
 
   return (
-    <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 relative">
+    <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 relative">
       {/* Legend overlay */}
-      <div className="absolute top-3 right-3 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-lg px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-md border border-slate-200 dark:border-slate-700 flex items-center gap-2">
+      <div className="absolute top-3 right-3 z-[1000] bg-white/90 backdrop-blur-md rounded-lg px-3 py-2 text-xs font-medium text-slate-600 shadow-md border border-slate-200 flex items-center gap-2">
         <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
         {loading ? "Loading donors…" : `${donors.length} Active Donor${donors.length !== 1 ? 's' : ''}`}
       </div>
 
+      {/* Locator button */}
+      {ngoCenter && (
+        <button
+          onClick={handleRecenter}
+          className="absolute bottom-4 right-4 z-[1000] bg-white hover:bg-slate-50 shadow-lg border border-slate-200 rounded-lg p-2.5 transition-all hover:scale-105 active:scale-95 group"
+          title="Return to your location"
+        >
+          <svg className="w-5 h-5 text-purple-600 group-hover:text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v4m0 12v4m-10-10h4m12 0h4" />
+          </svg>
+        </button>
+      )}
+
+      {/* NGO badge */}
+      {ngoCenter && (
+        <div className="absolute top-3 left-3 z-[1000] bg-purple-600/90 backdrop-blur-md rounded-lg px-3 py-2 text-xs font-medium text-white shadow-md flex items-center gap-2">
+          📍 {ngoName}
+        </div>
+      )}
+
       <MapContainer
-        center={defaultCenter}
-        zoom={15}
+        center={mapCenter}
+        zoom={mapZoom}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
         zoomControl={true}
@@ -148,11 +228,30 @@ function DonorMapInner() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        {flyTarget && <FlyToCenter center={flyTarget.center} zoom={flyTarget.zoom} />}
+
+        {/* NGO's own location marker */}
+        {ngoCenter && (
+          <Marker position={ngoCenter} icon={ngoIcon}>
+            <Popup>
+              <div style={{ minWidth: 160, fontFamily: "inherit", textAlign: "center" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px", color: "#6d28d9", marginBottom: "4px" }}>
+                  📍 {ngoName}
+                </div>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>
+                  Your NGO Location
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Donor markers */}
         {donors.map((donor) => {
           const isClaimed = claimedIds.has(donor.id)
 
           return (
-            <Marker key={donor.id} position={[donor.lat, donor.lng]} icon={donorIcon}>
+            <Marker key={donor.id} position={[donor.lat, donor.lng]} icon={donor.hasActiveFood ? donorIcon : inactiveDonorIcon}>
               <Popup>
                 <div style={{ minWidth: 200, fontFamily: "inherit" }}>
                   <div style={{
@@ -170,41 +269,45 @@ function DonorMapInner() {
                     alignItems: "center",
                     gap: "6px",
                     fontSize: "13px",
-                    color: "#64748b",
+                    color: donor.hasActiveFood ? "#059669" : "#94a3b8",
                     marginBottom: "2px",
                   }}>
-                    <span>🍽️</span> {donor.foodType}
+                    <span>{donor.hasActiveFood ? "🍽️" : "🏢"}</span> {donor.foodType}
                   </div>
 
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    color: "#64748b",
-                    marginBottom: "12px",
-                  }}>
-                    <span>📦</span> {donor.quantity} available
-                  </div>
-
-                  <button
-                    onClick={() => handleClaim(donor.id)}
-                    disabled={isClaimed}
-                    style={{
-                      width: "100%",
-                      padding: "8px 0",
-                      borderRadius: "8px",
-                      border: "none",
-                      fontWeight: 600,
+                  {donor.hasActiveFood && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
                       fontSize: "13px",
-                      cursor: isClaimed ? "default" : "pointer",
-                      transition: "all 0.2s",
-                      backgroundColor: isClaimed ? "#d1fae5" : "#059669",
-                      color: isClaimed ? "#065f46" : "#ffffff",
-                    }}
-                  >
-                    {isClaimed ? "✓ Claimed" : "Claim Food"}
-                  </button>
+                      color: "#64748b",
+                      marginBottom: "12px",
+                    }}>
+                      <span>📦</span> {donor.quantity}
+                    </div>
+                  )}
+
+                  {donor.hasActiveFood && (
+                    <button
+                      onClick={() => handleClaim(donor.id)}
+                      disabled={isClaimed}
+                      style={{
+                        width: "100%",
+                        padding: "8px 0",
+                        borderRadius: "8px",
+                        border: "none",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        cursor: isClaimed ? "default" : "pointer",
+                        transition: "all 0.2s",
+                        backgroundColor: isClaimed ? "#d1fae5" : "#059669",
+                        color: isClaimed ? "#065f46" : "#ffffff",
+                      }}
+                    >
+                      {isClaimed ? "✓ Claimed" : "Claim Food"}
+                    </button>
+                  )}
                 </div>
               </Popup>
             </Marker>
@@ -221,7 +324,7 @@ import dynamic from "next/dynamic"
 const DonorMap = dynamic(() => Promise.resolve(DonorMapInner), {
   ssr: false,
   loading: () => (
-    <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+    <div className="h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
       <div className="flex flex-col items-center gap-3 text-slate-400">
         <svg className="animate-spin h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
