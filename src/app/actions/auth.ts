@@ -3,6 +3,18 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+/**
+ * Generates a unique trust number for an organization.
+ * Format: SUS-{BIZ|NGO}-{YEAR}-{5-DIGIT-RANDOM}
+ * This serves as a joinable code for teams in future.
+ */
+function generateTrustNumber(role: string): string {
+  const prefix = role === 'ngo' ? 'NGO' : 'BIZ'
+  const year = new Date().getFullYear()
+  const random = Math.floor(10000 + Math.random() * 90000) // 5-digit
+  return `SUS-${prefix}-${year}-${random}`
+}
+
 export async function registerOrganization(formData: any) {
   const cookieStore = await cookies()
 
@@ -61,11 +73,14 @@ export async function registerOrganization(formData: any) {
     })
   }
 
-  // 3. Insert organization details
+  // 3. Generate a unique trust number for this organization
+  const trustNumber = generateTrustNumber(formData.goal)
+
+  // 4. Insert organization details
   const orgPayload = {
     user_id: authData.user.id,
     name: formData.orgName || null,
-    legal_name: formData.orgLegalName || null,
+    legal_name: trustNumber,
     email: formData.orgEmail || null,
     phone: formData.orgPhone || null,
     address: formData.orgAddress || null,
