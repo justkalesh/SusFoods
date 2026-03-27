@@ -39,32 +39,38 @@ function DonorMapInner() {
       // Fetch available food items joined with donor profiles for location + name
       const { data, error } = await supabase
         .from('food_items')
-        .select('id, item_name, category, quantity_kg, donor_id, profiles(organization_name, latitude, longitude)')
+        .select(`
+          id, item_name, quantity_kg, donor_id, 
+          profiles:donor_id(organization_name, latitude, longitude)
+        `)
         .eq('status', 'Available')
-        .order('created_at', { ascending: false })
 
-      if (error) {
+      if (error || !data) {
         console.error("Error fetching map donors:", error)
         setLoading(false)
         return
       }
 
-      if (data) {
-        const pins: DonorPin[] = data
-          .filter((item: any) => {
-            const profile = item.profiles
-            return profile?.latitude && profile?.longitude
-          })
-          .map((item: any) => ({
+      const pins: DonorPin[] = []
+      
+      data.forEach((item: any) => {
+        // Since it's a 1-to-1 join, profiles might be a single object or Array depending on FK constraints.
+        // Usually it's an object if foreign key is unique, otherwise array. We handle both:
+        const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+        
+        if (profile?.latitude && profile?.longitude) {
+          pins.push({
             id: item.id,
-            businessName: item.profiles?.organization_name || "Local Donor",
+            businessName: profile.organization_name || "Local Donor",
             foodType: item.item_name,
             quantity: `${item.quantity_kg} kg`,
-            lat: Number(item.profiles.latitude),
-            lng: Number(item.profiles.longitude),
-          }))
-        setDonors(pins)
-      }
+            lat: Number(profile.latitude),
+            lng: Number(profile.longitude),
+          })
+        }
+      })
+
+      setDonors(pins)
       setLoading(false)
     }
 
