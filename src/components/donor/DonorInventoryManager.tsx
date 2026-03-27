@@ -4,12 +4,14 @@ import { useState, useMemo, useCallback, Fragment } from "react"
 import {
   Package, ChevronDown, ChevronRight, MapPin, AlertTriangle,
   ShieldAlert, Leaf, MoreHorizontal, Pencil, Trash2, Heart,
-  Radio, ArrowUpDown, Search, X
+  Radio, ArrowUpDown, Search, X, Plus
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { AddStockForm } from "@/components/donor/AddStockForm"
+import type { InventoryItem as AddStockItem } from "@/components/donor/AddStockForm"
 
 // ══════════════════════════════════════════════════════════════
 // TYPES
@@ -220,6 +222,12 @@ export function DonorInventoryManager() {
   const [sortAsc, setSortAsc] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editQty, setEditQty] = useState("")
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  // ── Add stock handler ──
+  const handleAddStock = useCallback((newItem: AddStockItem) => {
+    setInventory(prev => [newItem, ...prev])
+  }, [])
 
   // ── Auto-sync isPubliclyVisible based on expiry ──
   const syncedInventory = useMemo(() => {
@@ -364,8 +372,19 @@ export function DonorInventoryManager() {
               </div>
             </div>
 
-            {/* Search */}
-            <div className="relative w-full sm:w-64">
+            <div className="flex items-center gap-2">
+              {/* Add Stock Button */}
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 h-9 px-4 shadow-md shadow-emerald-500/15"
+                onClick={() => setShowAddForm(!showAddForm)}
+              >
+                <Plus className="h-4 w-4" />
+                {showAddForm ? "Close" : "Add Stock"}
+              </Button>
+
+              {/* Search */}
+              <div className="relative w-full sm:w-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Search items or batch IDs…"
@@ -379,8 +398,16 @@ export function DonorInventoryManager() {
                 </button>
               )}
             </div>
+            </div>
           </div>
         </CardHeader>
+
+        {/* Add Stock Form (collapsible) */}
+        {showAddForm && (
+          <div className="px-6 pt-4">
+            <AddStockForm onAddStock={handleAddStock} onCancel={() => setShowAddForm(false)} />
+          </div>
+        )}
 
         <CardContent className="p-0">
           <div className="overflow-x-auto">
