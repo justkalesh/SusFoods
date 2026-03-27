@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress"
 import { TrendingUp, Leaf, Recycle, Clock, Package, Tag, Scale, CalendarClock, Sparkles, ArrowRight, AlertCircle, Truck, CheckCircle2 } from "lucide-react"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { SmartScanner } from "@/components/SmartScanner"
+import { DonorInventoryManager } from "@/components/donor/DonorInventoryManager"
 
 const impactData = [
   { month: "Jan", co2: 400 },
@@ -183,6 +184,7 @@ export default function BusinessDashboard() {
           <TabsTrigger value="smart-scan" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Auto-Scan Invoice</TabsTrigger>
           <TabsTrigger value="inventory" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Manual Entry</TabsTrigger>
           <TabsTrigger value="journey" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Meal Journey</TabsTrigger>
+          <TabsTrigger value="stock-manager" className="gap-2 data-[active]:bg-white data-[active]:!text-emerald-700 data-[active]:shadow-md data-[active]:border-slate-200 rounded-lg px-5 py-3 text-[15px] font-medium text-slate-500 hover:text-slate-700 transition-all">Stock Manager</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -516,6 +518,10 @@ export default function BusinessDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="stock-manager" className="space-y-4">
+          <DonorInventoryManager />
         </TabsContent>
       </Tabs>
     </div>
