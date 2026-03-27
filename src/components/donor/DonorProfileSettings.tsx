@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { createClient } from "@/utils/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,14 +26,45 @@ interface DonorProfile {
 
 export function DonorProfileSettings() {
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [avatarHover, setAvatarHover] = useState(false)
   const [profile, setProfile] = useState<DonorProfile>({
-    businessName: "LPU Mega Mess",
-    businessType: "campus_mess",
-    contactName: "Rajesh Kumar",
-    phone: "+91 98765 43210",
-    address: "Block 34, Lovely Professional University, Phagwara, Punjab",
+    businessName: "",
+    businessType: "",
+    contactName: "",
+    phone: "",
+    address: "",
   })
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
+
+      // Get name from auth metadata
+      const meta = user.user_metadata || {}
+      const contactName = [meta.first_name, meta.last_name].filter(Boolean).join(" ")
+
+      // Get org details
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("name, type, phone, address")
+        .eq("user_id", user.id)
+        .single()
+
+      setProfile({
+        businessName: org?.name || "",
+        businessType: org?.type || "",
+        contactName: contactName || "",
+        phone: org?.phone || meta.phone || "",
+        address: org?.address || "",
+      })
+      setLoading(false)
+    }
+    loadProfile()
+  }, [])
 
   const update = (field: keyof DonorProfile, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }))
@@ -40,11 +72,37 @@ export function DonorProfileSettings() {
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+
+    const { error } = await supabase
+      .from("organizations")
+      .update({
+        name: profile.businessName,
+        type: profile.businessType,
+        phone: profile.phone,
+        address: profile.address,
+      })
+      .eq("user_id", user.id)
+
     setSaving(false)
-    toast.success("Profile updated successfully!", {
-      description: "Your business profile changes have been saved.",
-    })
+    if (error) {
+      toast.error("Failed to save profile", { description: error.message })
+    } else {
+      toast.success("Profile updated successfully!", {
+        description: "Your business profile changes have been saved.",
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card className="bg-white border-slate-200 shadow-lg">
+        <CardContent className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 text-emerald-500 animate-spin" />
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -85,6 +143,7 @@ export function DonorProfileSettings() {
                 id="dp-businessName"
                 value={profile.businessName}
                 onChange={e => update("businessName", e.target.value)}
+                placeholder="Your business name"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -95,13 +154,16 @@ export function DonorProfileSettings() {
             <Label className="text-slate-700 font-medium text-sm">Business Type</Label>
             <Select value={profile.businessType} onValueChange={v => { if (v) update("businessType", v) }}>
               <SelectTrigger className="h-11 bg-slate-50 border-slate-200 text-slate-900 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all">
-                <SelectValue />
+                <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className="bg-white border-slate-200">
                 <SelectItem value="restaurant">Restaurant</SelectItem>
                 <SelectItem value="campus_mess">Campus Mess</SelectItem>
                 <SelectItem value="banquet_hall">Banquet Hall</SelectItem>
                 <SelectItem value="supermarket">Supermarket</SelectItem>
+                <SelectItem value="catering">Catering Service</SelectItem>
+                <SelectItem value="hotel">Hotel</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -115,6 +177,7 @@ export function DonorProfileSettings() {
                 id="dp-contactName"
                 value={profile.contactName}
                 onChange={e => update("contactName", e.target.value)}
+                placeholder="Contact person name"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -130,6 +193,7 @@ export function DonorProfileSettings() {
                 type="tel"
                 value={profile.phone}
                 onChange={e => update("phone", e.target.value)}
+                placeholder="+91 XXXXX XXXXX"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -144,6 +208,7 @@ export function DonorProfileSettings() {
                 id="dp-address"
                 value={profile.address}
                 onChange={e => update("address", e.target.value)}
+                placeholder="Your business address"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>

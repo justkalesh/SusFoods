@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { createClient } from "@/utils/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,15 +20,47 @@ interface NGOProfile {
 
 export function NGOProfileSettings() {
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [avatarHover, setAvatarHover] = useState(false)
   const [profile, setProfile] = useState<NGOProfile>({
-    organizationName: "City Hope Shelter",
-    registrationNumber: "NGO-PB-2024-00451",
-    contactName: "Priya Sharma",
-    phone: "+91 91234 56789",
-    dailyCapacity: "250",
-    address: "Opposite LPU Gate 1, GT Road, Phagwara, Punjab",
+    organizationName: "",
+    registrationNumber: "",
+    contactName: "",
+    phone: "",
+    dailyCapacity: "",
+    address: "",
   })
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
+
+      // Get name from auth metadata
+      const meta = user.user_metadata || {}
+      const contactName = [meta.first_name, meta.last_name].filter(Boolean).join(" ")
+
+      // Get org details
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("name, legal_name, phone, address")
+        .eq("user_id", user.id)
+        .single()
+
+      setProfile({
+        organizationName: org?.name || "",
+        registrationNumber: org?.legal_name || "",
+        contactName: contactName || "",
+        phone: org?.phone || meta.phone || "",
+        dailyCapacity: "",
+        address: org?.address || "",
+      })
+      setLoading(false)
+    }
+    loadProfile()
+  }, [])
 
   const update = (field: keyof NGOProfile, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }))
@@ -35,11 +68,37 @@ export function NGOProfileSettings() {
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+
+    const { error } = await supabase
+      .from("organizations")
+      .update({
+        name: profile.organizationName,
+        legal_name: profile.registrationNumber,
+        phone: profile.phone,
+        address: profile.address,
+      })
+      .eq("user_id", user.id)
+
     setSaving(false)
-    toast.success("Profile updated successfully!", {
-      description: "Your organization profile changes have been saved.",
-    })
+    if (error) {
+      toast.error("Failed to save profile", { description: error.message })
+    } else {
+      toast.success("Profile updated successfully!", {
+        description: "Your organization profile changes have been saved.",
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card className="bg-white border-slate-200 shadow-lg">
+        <CardContent className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 text-emerald-500 animate-spin" />
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -80,6 +139,7 @@ export function NGOProfileSettings() {
                 id="np-orgName"
                 value={profile.organizationName}
                 onChange={e => update("organizationName", e.target.value)}
+                placeholder="Your organization name"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -94,6 +154,7 @@ export function NGOProfileSettings() {
                 id="np-regNumber"
                 value={profile.registrationNumber}
                 onChange={e => update("registrationNumber", e.target.value)}
+                placeholder="e.g. NGO-PB-2024-00451"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -108,6 +169,7 @@ export function NGOProfileSettings() {
                 id="np-contactName"
                 value={profile.contactName}
                 onChange={e => update("contactName", e.target.value)}
+                placeholder="Contact person name"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -123,6 +185,7 @@ export function NGOProfileSettings() {
                 type="tel"
                 value={profile.phone}
                 onChange={e => update("phone", e.target.value)}
+                placeholder="+91 XXXXX XXXXX"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>
@@ -154,6 +217,7 @@ export function NGOProfileSettings() {
                 id="np-address"
                 value={profile.address}
                 onChange={e => update("address", e.target.value)}
+                placeholder="Your operating address"
                 className="h-11 pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all"
               />
             </div>

@@ -27,10 +27,11 @@ export default function NGODashboard() {
   const supabase = createClient()
 
   // Helper: convert a DB food_item row to our FoodItem type
-  const mapFoodItem = (item: any): FoodItem => ({
+  // Helper: convert a DB food_item row to our FoodItem type
+  const mapFoodItem = (item: any, orgName?: string): FoodItem => ({
     id: item.id,
     donorId: item.donor_id,
-    donorName: item.profiles?.organization_name || "Local Business",
+    donorName: orgName || "Local Business",
     itemName: item.item_name,
     category: item.category as any,
     quantityKg: item.quantity_kg,
@@ -42,18 +43,33 @@ export default function NGODashboard() {
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser()
         
-      // Fetch feed (available food) with donor profile for name
+      // Fetch feed (available food items)
       const { data: foodData, error: foodError } = await supabase
         .from('food_items')
-        .select('*, profiles(organization_name)')
+        .select('*')
         .eq('status', 'Available')
         .order('created_at', { ascending: false })
         
       if (foodError) {
         console.error("Error fetching food feed:", foodError)
         setFetchError("Failed to load the donation feed.")
+      } else if (foodData && foodData.length > 0) {
+        // Fetch org names for all donor_ids
+        const donorIds = [...new Set(foodData.map((f: any) => f.donor_id))]
+        const { data: orgs } = await supabase
+          .from('organizations')
+          .select('user_id, name')
+          .in('user_id', donorIds)
+        
+        const orgNameMap: Record<string, string> = {}
+        if (orgs) {
+          for (const org of orgs) {
+            orgNameMap[org.user_id] = org.name || "Local Business"
+          }
+        }
+        setFeed(foodData.map((item: any) => mapFoodItem(item, orgNameMap[item.donor_id])))
       } else {
-        setFeed((foodData || []).map(mapFoodItem))
+        setFeed([])
       }
 
       // Fetch claims for this user
@@ -104,15 +120,22 @@ export default function NGODashboard() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'food_items' },
         async (payload) => {
-          // Fetch the full row with the profile join for the donor name
+          // Fetch the full row + org name for the new item
           const { data } = await supabase
             .from('food_items')
-            .select('*, profiles(organization_name)')
+            .select('*')
             .eq('id', payload.new.id)
             .single()
           
           if (data && data.status === 'Available') {
-            setFeed(prev => [mapFoodItem(data), ...prev])
+            // Fetch org name for this donor
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('user_id', data.donor_id)
+              .single()
+            
+            setFeed(prev => [mapFoodItem(data, org?.name), ...prev])
           }
         }
       )
