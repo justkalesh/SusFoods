@@ -64,8 +64,7 @@ function DonorMapInner() {
         .in('user_id', donorIds)
 
       if (orgError) {
-        console.error("Error fetching organization coordinates:", orgError)
-        // Don't block — just show empty map
+        console.warn("Could not fetch organization coordinates (RLS may need SELECT policy on organizations table):", orgError?.message || orgError)
       }
 
       // 4. Build a lookup: user_id → org info
