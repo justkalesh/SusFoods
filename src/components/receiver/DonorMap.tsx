@@ -15,35 +15,35 @@ interface DonorPin {
   lat: number
   lng: number
   hasActiveFood: boolean
+  phone: string
 }
 
 // ── Custom Marker Icons ─────────────────────────────────────
-const donorIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// Active donor: green circle with food emoji
+const donorActiveIcon = new L.DivIcon({
+  html: `<div style="background: linear-gradient(135deg, #10b981, #059669); width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(5,150,105,0.4); display:flex; align-items:center; justify-content:center;"><span style="font-size:14px;">🍲</span></div>`,
+  className: "",
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -18],
 })
 
-// Greyed out marker for donors without active food
-const inactiveDonorIcon = new L.DivIcon({
-  html: `<div style="background: linear-gradient(135deg, #94a3b8, #64748b); width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;"><span style="font-size:12px;">🏢</span></div>`,
+// Inactive donor: grey circle with building emoji
+const donorInactiveIcon = new L.DivIcon({
+  html: `<div style="background: linear-gradient(135deg, #94a3b8, #64748b); width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center;"><span style="font-size:11px;">🏢</span></div>`,
   className: "",
   iconSize: [24, 24],
   iconAnchor: [12, 12],
   popupAnchor: [0, -16],
 })
 
-// Purple marker for NGO's own location
+// NGO's own location: purple circle with pin emoji (larger)
 const ngoIcon = new L.DivIcon({
-  html: `<div style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><span style="font-size: 16px;">📍</span></div>`,
+  html: `<div style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); width: 36px; height: 36px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(109,40,217,0.4); display:flex; align-items:center; justify-content:center;"><span style="font-size:18px;">📍</span></div>`,
   className: "",
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -20],
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  popupAnchor: [0, -22],
 })
 
 // ── Fly-to helper component ─────────────────────────────────
@@ -62,6 +62,7 @@ function DonorMapInner() {
   const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set())
   const [ngoCenter, setNgoCenter] = useState<[number, number] | null>(null)
   const [ngoName, setNgoName] = useState("Your Location")
+  const [ngoPhone, setNgoPhone] = useState("")
   const [flyTarget, setFlyTarget] = useState<{ center: [number, number]; zoom: number } | null>(null)
   const supabase = createClient()
 
@@ -77,7 +78,7 @@ function DonorMapInner() {
       if (user) {
         const { data: ngoOrg } = await supabase
           .from("organizations")
-          .select("name, latitude, longitude")
+          .select("name, phone, latitude, longitude")
           .eq("user_id", user.id)
           .maybeSingle()
 
@@ -87,6 +88,7 @@ function DonorMapInner() {
           if (lat !== 0 && lng !== 0) {
             setNgoCenter([lat, lng])
             setNgoName(ngoOrg.name || "Your NGO")
+            if (ngoOrg.phone) setNgoPhone(ngoOrg.phone)
           }
         }
       }
@@ -94,14 +96,14 @@ function DonorMapInner() {
       // 2. Fetch ALL organizations with valid coordinates (every registered donor)
       const { data: allOrgs, error: orgError } = await supabase
         .from('organizations')
-        .select('user_id, name, latitude, longitude')
+        .select('user_id, name, phone, latitude, longitude')
 
       if (orgError) {
         console.warn("[DonorMap] Org query error:", orgError.message)
       }
 
       // Build map of all orgs with valid coordinates
-      const orgList: { userId: string; name: string; lat: number; lng: number }[] = []
+      const orgList: { userId: string; name: string; phone: string; lat: number; lng: number }[] = []
       if (allOrgs) {
         for (const org of allOrgs) {
           const lat = Number(org.latitude)
@@ -109,7 +111,7 @@ function DonorMapInner() {
           if (lat && lng && lat !== 0 && lng !== 0) {
             // Skip the current NGO user (they have their own pin)
             if (user && org.user_id === user.id) continue
-            orgList.push({ userId: org.user_id, name: org.name || "Registered Donor", lat, lng })
+            orgList.push({ userId: org.user_id, name: org.name || "Registered Donor", phone: org.phone || "", lat, lng })
           }
         }
       }
@@ -143,6 +145,7 @@ function DonorMapInner() {
           lat: org.lat,
           lng: org.lng,
           hasActiveFood: !!food,
+          phone: org.phone,
         }
       })
 
@@ -234,13 +237,18 @@ function DonorMapInner() {
         {ngoCenter && (
           <Marker position={ngoCenter} icon={ngoIcon}>
             <Popup>
-              <div style={{ minWidth: 160, fontFamily: "inherit", textAlign: "center" }}>
+              <div style={{ minWidth: 180, fontFamily: "inherit", textAlign: "center" }}>
                 <div style={{ fontWeight: 700, fontSize: "14px", color: "#6d28d9", marginBottom: "4px" }}>
                   📍 {ngoName}
                 </div>
                 <div style={{ fontSize: "12px", color: "#64748b" }}>
                   Your NGO Location
                 </div>
+                {ngoPhone && (
+                  <div style={{ fontSize: "12px", color: "#6d28d9", marginTop: "4px", fontWeight: 500 }}>
+                    📞 {ngoPhone}
+                  </div>
+                )}
               </div>
             </Popup>
           </Marker>
@@ -251,7 +259,7 @@ function DonorMapInner() {
           const isClaimed = claimedIds.has(donor.id)
 
           return (
-            <Marker key={donor.id} position={[donor.lat, donor.lng]} icon={donor.hasActiveFood ? donorIcon : inactiveDonorIcon}>
+            <Marker key={donor.id} position={[donor.lat, donor.lng]} icon={donor.hasActiveFood ? donorActiveIcon : donorInactiveIcon}>
               <Popup>
                 <div style={{ minWidth: 200, fontFamily: "inherit" }}>
                   <div style={{
@@ -274,6 +282,21 @@ function DonorMapInner() {
                   }}>
                     <span>{donor.hasActiveFood ? "🍽️" : "🏢"}</span> {donor.foodType}
                   </div>
+
+                  {donor.phone && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "12px",
+                      color: "#475569",
+                      marginBottom: "2px",
+                      marginTop: "4px",
+                    }}>
+                      <span>📞</span>
+                      <a href={`tel:${donor.phone}`} style={{ color: "#059669", textDecoration: "none", fontWeight: 500 }}>{donor.phone}</a>
+                    </div>
+                  )}
 
                   {donor.hasActiveFood && (
                     <div style={{
